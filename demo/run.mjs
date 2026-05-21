@@ -207,7 +207,7 @@ console.log(sRow('Replay-proof', _.bold + _.grn + 'yes' + _.rst + _.dgry + '  ·
 console.log(sRow('Trustless',    _.bold + _.grn + 'yes' + _.rst + _.dgry + '  ·  any party can verify with the public key' + _.rst))
 console.log(sRow('On-chain',     _.dgry + 'agentAddress → CevexRegistry.sol on Base' + _.rst))
 console.log(sEmp())
-console.log(sRow('',             _.dgry + 'github.com/cevexlabs/Cevex' + _.rst))
+console.log(sRow('',             _.dgry + 'github.com/cevexlabs/Cevex  ·  x.com/cevex_io' + _.rst))
 console.log(sEmp())
 console.log(sBot())
 console.log()
