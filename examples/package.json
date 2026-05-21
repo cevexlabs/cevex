@@ -10,6 +10,11 @@
     "verify": "node run.mjs verify",
     "scenario": "node run.mjs test",
     "test": "node run.mjs test --json",
+    "workflow": "node workflow.mjs all",
+    "workflow:init": "node workflow.mjs init",
+    "workflow:sign": "node workflow.mjs sign",
+    "workflow:verify": "node workflow.mjs verify",
+    "workflow:tamper": "node workflow.mjs tamper",
     "help": "node run.mjs help"
   },
   "dependencies": {

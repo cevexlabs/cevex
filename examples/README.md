@@ -39,6 +39,46 @@ node run.mjs help
 
 Shows all available demo commands.
 
+## File Workflow
+
+For a more realistic command-by-command flow, use `workflow.mjs`.
+
+```bash
+node workflow.mjs init
+```
+
+Creates:
+
+| File | Purpose |
+|---|---|
+| `artifacts/agent.key.json` | Demo signing key for the local agent |
+| `artifacts/registry-record.json` | Offline registry record with the public key |
+| `artifacts/transfer-request.json` | Editable Base USDC transfer request |
+
+```bash
+node workflow.mjs sign
+```
+
+Reads the demo key and transfer request, then writes `artifacts/signed-transfer.json`.
+
+```bash
+node workflow.mjs verify
+```
+
+Reads the registry record and signed transfer, then checks the signature.
+
+```bash
+node workflow.mjs tamper
+```
+
+Creates `artifacts/tampered-transfer.json` by changing the amount and recipient. Verification must reject it.
+
+You can also run the full sequence:
+
+```bash
+npm run workflow
+```
+
 ## Scenario
 
 The test models a treasury agent approving a Base USDC transfer:
