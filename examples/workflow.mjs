@@ -23,11 +23,32 @@ const ATTACKER = '0x000000000000000000000000000000000000dEaD'
 
 const argv = process.argv.slice(2)
 const command = (argv[0] ?? 'help').toLowerCase()
+const options = parseOptions(argv.slice(1))
 
 const toHex = bytes => Buffer.from(bytes).toString('hex')
 const fromHex = hex => new Uint8Array(Buffer.from(hex, 'hex'))
 const digestHex = bytes => toHex(shake256(bytes, { dkLen: 32 }))
 const abbr = text => `${text.slice(0, 10)}...${text.slice(-8)}`
+const isAddress = value => /^0x[0-9a-fA-F]{40}$/.test(String(value))
+
+function parseOptions(args) {
+  const parsed = {}
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i]
+    if (!arg.startsWith('--')) continue
+
+    const key = arg.slice(2)
+    const next = args[i + 1]
+    if (!next || next.startsWith('--')) {
+      parsed[key] = true
+      continue
+    }
+
+    parsed[key] = next
+    i += 1
+  }
+  return parsed
+}
 
 function canonicalJson(value) {
   if (Array.isArray(value)) {
@@ -113,25 +134,38 @@ function writeJson(path, value) {
   writeFileSync(path, JSON.stringify(value, null, 2) + '\n')
 }
 
-function makeRequest(timestamp) {
+function makeRequest(timestamp, input = {}) {
+  const amount = String(input.amount ?? '1250.00')
+  const token = String(input.token ?? 'USDC').toUpperCase()
+  const recipient = String(input.recipient ?? RECIPIENT)
+  const agentId = String(input.agent ?? 'treasury-agent-01')
+  const agentRole = String(input.role ?? 'payment-approver')
+  const policy = String(input.policy ?? 'allowlist-transfer-v1')
+  const policyLimit = String(input.limit ?? '5000.00')
+  const requestId = String(input.request ?? `pay-${timestamp.toString(36)}`)
+
+  if (!isAddress(recipient)) {
+    throw new Error(`Invalid recipient address: ${recipient}`)
+  }
+
   return {
     version: 'cevex-transfer-request-v1',
     nonce: 17,
     timestamp,
     action: {
-      requestId: `pay-${timestamp.toString(36)}`,
+      requestId,
       source: 'ops-console',
-      agentId: 'treasury-agent-01',
-      agentRole: 'payment-approver',
+      agentId,
+      agentRole,
       type: 'erc20.transfer',
       network: 'base',
       chainId: 8453,
-      token: 'USDC',
+      token,
       tokenAddress: BASE_USDC,
-      amount: '1250.00',
-      recipient: RECIPIENT,
-      policy: 'allowlist-transfer-v1',
-      policyLimit: '5000.00',
+      amount,
+      recipient,
+      policy,
+      policyLimit,
       expiresAt: new Date(timestamp + 5 * 60_000).toISOString(),
     },
   }
@@ -142,6 +176,7 @@ function showHelp() {
   console.log()
   console.log('Run these in order:')
   console.log('  node workflow.mjs init')
+  console.log(`  node workflow.mjs request --amount 2500.00 --recipient ${RECIPIENT}`)
   console.log('  node workflow.mjs sign')
   console.log('  node workflow.mjs verify')
   console.log('  node workflow.mjs tamper')
@@ -150,6 +185,14 @@ function showHelp() {
   console.log('  node workflow.mjs all')
   console.log()
   console.log('Artifacts are written to examples/artifacts/.')
+  console.log()
+  console.log('Request options:')
+  console.log('  --amount     Transfer amount, for example 2500.00')
+  console.log('  --recipient  Destination address')
+  console.log('  --agent      Agent ID')
+  console.log('  --role       Agent role')
+  console.log('  --policy     Policy ID')
+  console.log('  --limit      Policy amount limit')
 }
 
 function init() {
@@ -179,13 +222,31 @@ function init() {
     publicKeyHash: digestHex(publicKey),
   })
 
-  writeJson(files.request, makeRequest(timestamp))
+  writeJson(files.request, makeRequest(timestamp, options))
 
   console.log('INIT OK')
   console.log(`agent:   ${agentAddress}`)
   console.log(`key:     ${files.agentKey}`)
   console.log(`registry:${files.registry}`)
   console.log(`request: ${files.request}`)
+  console.log()
+  console.log(`Next: node workflow.mjs request --amount 2500.00 --recipient ${RECIPIENT}`)
+  console.log('Or:   node workflow.mjs sign')
+}
+
+function request() {
+  mkdirSync(artifactsDir, { recursive: true })
+
+  const timestamp = Date.now()
+  const requestFile = makeRequest(timestamp, options)
+  writeJson(files.request, requestFile)
+
+  console.log('REQUEST OK')
+  console.log(`request:   ${requestFile.action.requestId}`)
+  console.log(`agent:     ${requestFile.action.agentId}`)
+  console.log(`action:    ${requestFile.action.amount} ${requestFile.action.token} to ${abbr(requestFile.action.recipient)}`)
+  console.log(`policy:    ${requestFile.action.policy} limit ${requestFile.action.policyLimit}`)
+  console.log(`output:    ${files.request}`)
   console.log()
   console.log('Next: node workflow.mjs sign')
 }
@@ -295,6 +356,8 @@ function tamper() {
 function all() {
   init()
   console.log()
+  request()
+  console.log()
   sign()
   console.log()
   verify()
@@ -305,6 +368,7 @@ function all() {
 try {
   if (command === 'help') showHelp()
   else if (command === 'init') init()
+  else if (command === 'request') request()
   else if (command === 'sign') sign()
   else if (command === 'verify') {
     const fileIndex = argv.indexOf('--file')

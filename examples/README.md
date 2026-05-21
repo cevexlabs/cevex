@@ -56,6 +56,21 @@ Creates:
 | `artifacts/transfer-request.json` | Editable Base USDC transfer request |
 
 ```bash
+node workflow.mjs request --amount 2500.00 --recipient 0x6fB3E0A217407EFFf7Ca062D46c26E5d60a14d69
+```
+
+Writes a transfer request with values you provide. Useful options are:
+
+| Option | Purpose |
+|---|---|
+| `--amount` | Transfer amount |
+| `--recipient` | Destination address |
+| `--agent` | Agent ID |
+| `--role` | Agent role |
+| `--policy` | Policy ID |
+| `--limit` | Policy amount limit |
+
+```bash
 node workflow.mjs sign
 ```
 

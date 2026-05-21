@@ -12,6 +12,7 @@
     "test": "node run.mjs test --json",
     "workflow": "node workflow.mjs all",
     "workflow:init": "node workflow.mjs init",
+    "workflow:request": "node workflow.mjs request",
     "workflow:sign": "node workflow.mjs sign",
     "workflow:verify": "node workflow.mjs verify",
     "workflow:tamper": "node workflow.mjs tamper",
