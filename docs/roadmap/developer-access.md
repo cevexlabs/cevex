@@ -1,10 +1,10 @@
-# Phase 2: Developer Access
+# Phase 2: Developer Tools
 
 {% hint style="info" %}
-**Active delivery.** The TypeScript packages, CLI surface, local validation demo, and GitBook reference are now available in the repository.
+**Developer tools are active.** SDK packages, the CLI surface, the local demo, and GitBook reference are available in the repository.
 {% endhint %}
 
-The protocol layer is useful only when developers can provision identities, sign actions, verify messages, and inspect registry state without handling raw lattice internals. Developer Access packages the CEVEX primitives into interfaces that are practical for agent operators and application teams.
+This phase turns the core identity system into tools people can actually use. Developers can create an agent identity, sign an action, verify a message, and inspect registry state without needing to understand the cryptography internals first.
 
 ---
 
@@ -14,7 +14,7 @@ The protocol layer is useful only when developers can provision identities, sign
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#003399', 'primaryTextColor': '#eff6ff', 'primaryBorderColor': '#1a7fff', 'lineColor': '#3d8bff', 'secondaryColor': '#001650', 'tertiaryColor': '#000d20', 'clusterBkg': '#001650', 'titleColor': '#eff6ff', 'edgeLabelBackground': '#001650'}}}%%
 graph LR
     subgraph Packages["TypeScript Packages"]
-        CORE["@cevex/core\ncrypto primitives"]
+        CORE["@cevex/core\ncore crypto"]
         AGENT["@cevex/agent\nprovision and sign"]
         VERIFY["@cevex/verify\nsingle and batch verify"]
         REG["@cevex/registry\nBase client"]
@@ -26,7 +26,7 @@ graph LR
     end
 
     subgraph Python["Python"]
-        PY["cevex\nAPI parity target"]
+        PY["cevex\nPython parity"]
     end
 
     CORE --> AGENT
@@ -54,14 +54,14 @@ graph LR
 
 | Deliverable | Purpose | Status |
 |---|---|---|
-| `@cevex/core` | Dilithium, FALCON guarded interface, SHAKE-256, entropy types | Implemented |
-| `@cevex/agent` | Provisioning, message signing, key rotation, revocation surface | Implemented |
-| `@cevex/verify` | Single verification, batch verification, transcript interface | Implemented |
-| `@cevex/registry` | Base RPC client, identity lookup, registry writes | Source ready |
-| `@cevex/cli` | Provision, sign, verify, rotate, revoke, inspect | Implemented |
-| `cevex` Python | Python SDK with TypeScript API parity | Active build |
-| Examples | Local protocol validation and developer onboarding | Implemented |
-| GitBook docs | Public protocol and integration reference | Live |
+| `@cevex/core` | Core signing, key, and entropy utilities | Implemented |
+| `@cevex/agent` | Agent setup, signing, rotation, and revocation surface | Implemented |
+| `@cevex/verify` | Single and batch message verification | Implemented |
+| `@cevex/registry` | Base registry lookup and write helpers | Source ready |
+| `@cevex/cli` | Terminal commands for the main workflows | Implemented |
+| `cevex` Python | Python SDK matching the TypeScript shape | Active build |
+| Examples | Local demo for onboarding and validation | Implemented |
+| GitBook docs | Public reference for users and developers | Live |
 
 ---
 
@@ -88,9 +88,9 @@ sequenceDiagram
 
 ---
 
-## Canonical Bytes
+## Message Format
 
-Every SDK implementation must produce the same byte sequence before signing:
+Every SDK implementation turns a signed action into the same byte format before signing. This keeps messages consistent across apps and prevents replay or cross-use mistakes.
 
 ```text
 CEVEX-MSG-v1 ||
@@ -127,6 +127,6 @@ $$\text{Verify}_{pk}\!\left(\text{Encode}_{\text{CEVEX-MSG-v1}}(m),\sigma\right)
 
 ## Next
 
-* [Phase 1: Foundation](foundation.md)
-* [Phase 3: Ecosystem Expansion](ecosystem-expansion.md)
-* [Phase 4: Research Horizon](research-horizon.md)
+* [Phase 1: Core Identity](foundation.md)
+* [Phase 3: Production Integrations](ecosystem-expansion.md)
+* [Phase 4: Advanced Research](research-horizon.md)

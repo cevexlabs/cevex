@@ -1,10 +1,10 @@
-# Phase 4: Research Horizon
+# Phase 4: Advanced Research
 
 {% hint style="info" %}
-**Research.** These items extend the protocol beyond the immediate release path and depend on cryptographic maturity, implementation safety, and formal review.
+**Advanced research.** These items improve long-term safety and scale after the core product path is stable.
 {% endhint %}
 
-The research horizon covers longer-range work where correctness matters more than speed of release. These items improve assurance, add conservative backup schemes, compress verification history, and support distributed control for high-value agents.
+This phase covers longer-range work where correctness matters more than speed. It focuses on stronger safety checks, backup signature options, compact audit history, and shared approval for high-value agents.
 
 ---
 
@@ -13,10 +13,10 @@ The research horizon covers longer-range work where correctness matters more tha
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#003399', 'primaryTextColor': '#eff6ff', 'primaryBorderColor': '#1a7fff', 'lineColor': '#3d8bff', 'secondaryColor': '#001650', 'tertiaryColor': '#000d20', 'clusterBkg': '#001650', 'titleColor': '#eff6ff', 'edgeLabelBackground': '#001650'}}}%%
 graph TD
-    FV["Formal Verification\ncontracts and protocol invariants"]
-    SLH["SLH-DSA\nhash-based backup scheme"]
-    REC["Recursive Proofs\ncompressed action history"]
-    THRESH["Threshold Signing\nt-of-n control"]
+    FV["Formal Safety Checks\ncontracts and registry rules"]
+    SLH["Backup Signature\nhash-based fallback"]
+    REC["Compact Audit History\ncompressed proof trail"]
+    THRESH["Shared Approval\nmulti-party control"]
     PARAM["Parameter Monitoring\n2080 horizon"]
 
     PARAM --> FV
@@ -34,9 +34,9 @@ graph TD
 
 ---
 
-## Formal Verification
+## Formal Safety Checks
 
-The CevexRegistry holds public keys, revocation state, and metadata commitments for agent identities. Formal verification targets machine-checked assurance for the registry invariants.
+The CevexRegistry holds public keys, revocation state, and metadata commitments for agent identities. Formal safety checks target machine-checked assurance for the registry rules.
 
 | Property | Statement |
 |---|---|
@@ -50,7 +50,7 @@ Candidate methods include K framework specifications, Certora Prover rules, and 
 
 ---
 
-## SLH-DSA Backup Scheme
+## Backup Signature Scheme
 
 SLH-DSA, formerly SPHINCS+, gives CEVEX a conservative hash-based fallback whose security does not rely on lattice assumptions.
 
@@ -64,7 +64,7 @@ SLH-DSA is best suited for high-value, low-frequency operations where conservati
 
 ---
 
-## Recursive Proof Aggregation
+## Compact Audit History
 
 Recursive proofs compress long action histories into a proof that remains small as the number of verified actions grows.
 
@@ -82,9 +82,9 @@ This matters for long-running agents that need to provide compact audit evidence
 
 ---
 
-## Threshold Signing
+## Shared Approval Signing
 
-Threshold signing allows an agent identity to require $t$ of $n$ authorized parties before producing a valid signature. The design target is distributed control without any participant holding the full signing key.
+Shared approval signing allows an agent identity to require $t$ of $n$ authorized parties before producing a valid signature. The design target is distributed control without any participant holding the full signing key.
 
 The Dilithium secret vector can be shared additively over $R_q$:
 
@@ -100,17 +100,17 @@ $$|\{i : \mathbf{s}_1^{(i)} \text{ participates}\}| \geq t$$
 
 | Milestone | Status |
 |---|---|
-| Formal registry specification | Research |
+| Registry safety specification | Research |
 | Machine-checked safety proofs | Research |
-| SLH-DSA integration study | Research |
-| Recursive proof feasibility | Research |
-| Threshold Dilithium design | Research |
+| Backup signature study | Research |
+| Compact proof feasibility | Research |
+| Shared approval signing design | Research |
 | Parameter monitoring process | Ongoing |
 
 ---
 
 ## Next
 
-* [Phase 1: Foundation](foundation.md)
-* [Phase 2: Developer Access](developer-access.md)
-* [Phase 3: Ecosystem Expansion](ecosystem-expansion.md)
+* [Phase 1: Core Identity](foundation.md)
+* [Phase 2: Developer Tools](developer-access.md)
+* [Phase 3: Production Integrations](ecosystem-expansion.md)

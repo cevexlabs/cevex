@@ -1,23 +1,23 @@
-# Phase 3: Ecosystem Expansion
+# Phase 3: Production Integrations
 
 {% hint style="warning" %}
-**Upcoming.** Ecosystem work begins after the developer access release hardens the SDK, CLI, and registry client.
+**Production integrations come next.** This phase moves CEVEX from local tools into production environments with audit records, secure key storage, and operator controls.
 {% endhint %}
 
-Ecosystem Expansion extends CEVEX from single-agent verification into production environments that need audit trails, cross-chain identity resolution, hardware-backed custody, and organizational controls.
+This phase is about making CEVEX easier to run in real systems. It adds stronger operational workflows for teams that need auditability, cross-chain identity lookup, hardware-backed custody, and policy controls.
 
 ---
 
-## Expansion Map
+## Integration Map
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#003399', 'primaryTextColor': '#eff6ff', 'primaryBorderColor': '#1a7fff', 'lineColor': '#3d8bff', 'secondaryColor': '#001650', 'tertiaryColor': '#000d20', 'clusterBkg': '#001650', 'titleColor': '#eff6ff', 'edgeLabelBackground': '#001650'}}}%%
 graph TD
     BASE["Base Registry\nsource of truth"]
-    AUDIT["Audit Transcripts\nvalidity without disclosure"]
-    BRIDGE["Cross-Chain Mirrors\nstate proof based"]
-    HSM["HSM Backend\nhardware custody"]
-    TEE["TEE Backend\nisolated signing"]
+    AUDIT["Private Audit Records\nvalidity without disclosure"]
+    BRIDGE["Cross-Chain Lookup\nstate proof based"]
+    HSM["Hardware Key Storage\nproduction custody"]
+    TEE["Isolated Signing\nsecure runtime"]
     OPS["Operator Controls\npolicy and monitoring"]
 
     BASE --> AUDIT
@@ -39,9 +39,9 @@ graph TD
 
 ---
 
-## ZK Audit Transcripts
+## Private Audit Records
 
-A CEVEX signature proves that an agent authorized a message. Audit transcripts extend this by allowing a verifier to prove that a set of signatures was valid without revealing each message.
+A CEVEX signature proves that an agent authorized a message. Private audit records extend this by allowing a verifier to prove that a set of signatures was valid without revealing each message.
 
 For a signed message $(m,\sigma,pk)$, the proof target is:
 
@@ -55,7 +55,7 @@ $$T_{\text{verify}} = O(\log n)$$
 
 ---
 
-## Cross-Chain Registry Mirrors
+## Cross-Chain Lookup
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#003399', 'primaryTextColor': '#eff6ff', 'primaryBorderColor': '#1a7fff', 'lineColor': '#3d8bff', 'secondaryColor': '#001650', 'tertiaryColor': '#000d20', 'clusterBkg': '#001650', 'titleColor': '#eff6ff', 'edgeLabelBackground': '#001650'}}}%%
@@ -85,7 +85,7 @@ Mirrors resolve agent identities outside Base using verifiable state proofs. The
 
 ---
 
-## Hardware Backends
+## Secure Key Storage
 
 | Backend | Purpose | Target Behavior |
 |---|---|---|
@@ -100,17 +100,17 @@ Mirrors resolve agent identities outside Base using verifiable state proofs. The
 
 | Deliverable | Outcome |
 |---|---|
-| ZK audit transcripts | Validity proof without message disclosure |
-| Batch proof aggregation | Efficient proof for high-volume agent activity |
-| Cross-chain mirrors | Agent identity resolution beyond Base |
-| HSM signer | Production key custody backend |
-| TEE signer | Isolated signing backend for autonomous agents |
-| Operator controls | Policy, monitoring, and emergency revocation workflows |
+| Private audit records | Validity proof without message disclosure |
+| High-volume audit proofs | Efficient proof for large batches of agent activity |
+| Cross-chain lookup | Agent identity resolution beyond Base |
+| Hardware key storage | Production key custody backend |
+| Isolated signing | Secure runtime for autonomous agents |
+| Operator controls | Policies, monitoring, and emergency revocation workflows |
 
 ---
 
 ## Next
 
-* [Phase 1: Foundation](foundation.md)
-* [Phase 2: Developer Access](developer-access.md)
-* [Phase 4: Research Horizon](research-horizon.md)
+* [Phase 1: Core Identity](foundation.md)
+* [Phase 2: Developer Tools](developer-access.md)
+* [Phase 4: Advanced Research](research-horizon.md)

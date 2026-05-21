@@ -1,10 +1,10 @@
-# Phase 1: Foundation
+# Phase 1: Core Identity
 
 {% hint style="success" %}
-**Implemented foundation.** The Dilithium identity path, deterministic addressing model, and Base registry source are in place.
+**Core identity is in place.** The repository can create an agent key, sign a message, verify it locally, and prepare the registry record.
 {% endhint %}
 
-The foundation phase establishes the core CEVEX identity primitive: entropy rooted in quantum physical processes, post-quantum signing, deterministic agent addressing, and an append-only registry model. These pieces define the security model that every later developer tool builds on.
+This phase proves the basic identity flow: an agent gets a secure key, signs an action, and any verifier can check that action without asking a central server. The deeper cryptography is still documented below for technical review.
 
 ---
 
@@ -13,21 +13,21 @@ The foundation phase establishes the core CEVEX identity primitive: entropy root
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#003399', 'primaryTextColor': '#eff6ff', 'primaryBorderColor': '#1a7fff', 'lineColor': '#3d8bff', 'secondaryColor': '#001650', 'tertiaryColor': '#000d20', 'clusterBkg': '#001650', 'titleColor': '#eff6ff', 'edgeLabelBackground': '#001650'}}}%%
 graph TD
-    subgraph Entropy["Entropy"]
-        QRNG["Hardware QRNG\nphotonic or vacuum source"]
-        HEALTH["NIST SP 800-90B\ncontinuous health tests"]
-        KDF["SHAKE-256\nconditioning and derivation"]
+    subgraph Entropy["Randomness"]
+        QRNG["Secure random source\nhardware or local dev"]
+        HEALTH["Quality checks\nrandomness health"]
+        KDF["Key seed\nSHAKE-256"]
     end
 
-    subgraph Signing["Signing"]
-        DIL["CRYSTALS-Dilithium\nML-DSA"]
+    subgraph Signing["Post-Quantum Signing"]
+        DIL["Dilithium\nactive"]
         FAL["FALCON\nreserved"]
     end
 
-    subgraph Identity["Identity"]
-        ADDR["agentAddress\nkeccak256(pk)[12..32]"]
-        REG["CevexRegistry\nBase"]
-        VERIFY["Trustless verification\nlocal lattice math"]
+    subgraph Identity["Agent Identity"]
+        ADDR["Agent address\npublic ID"]
+        REG["Registry source\nBase"]
+        VERIFY["Local verification\nno central server"]
     end
 
     QRNG --> HEALTH --> KDF
@@ -52,22 +52,22 @@ graph TD
 
 ## Delivered Components
 
-| Component | Specification | Status |
+| Area | What it means | Status |
 |---|---|---|
-| Entropy source | Hardware QRNG interface with local development entropy | Implemented |
-| Health testing | NIST SP 800-90B RCT and APT checks | Specified |
-| Key derivation | SHAKE-256 conditioned seed derivation | Implemented |
-| Primary signature | CRYSTALS-Dilithium, NIST FIPS 204 | Implemented |
-| Secondary signature | FALCON, NIST FIPS 206 | Reserved interface |
-| Agent address | `address(uint160(uint256(keccak256(publicKey))))` | Implemented |
-| Registry contract | Immutable Base registry source | Source ready |
-| Verification path | Public key lookup plus local signature verification | Implemented |
+| Randomness source | Keys can be created from hardware entropy or local development entropy | Implemented |
+| Randomness checks | Production entropy has a documented quality check model | Specified |
+| Key creation | Randomness is turned into a post-quantum keypair | Implemented |
+| Signing | Agents can sign messages with Dilithium | Implemented |
+| Secondary scheme | FALCON stays reserved for a later audited release | Reserved |
+| Agent address | Each public key maps to a stable agent ID | Implemented |
+| Registry contract | Base registry source is available in the repo | Source ready |
+| Verification | Signatures can be checked locally without a certificate authority | Implemented |
 
 ---
 
 ## Security Commitment
 
-The foundation phase commits CEVEX to post-quantum unforgeability under the standard lattice assumptions used by the selected NIST schemes.
+For technical readers, this phase commits CEVEX to post-quantum unforgeability under the standard lattice assumptions used by the selected NIST schemes.
 
 For the default Dilithium parameter set:
 
@@ -112,6 +112,6 @@ The registry is append-only. A registered identity can rotate keys or become per
 
 ## Next
 
-* [Phase 2: Developer Access](developer-access.md)
-* [Phase 3: Ecosystem Expansion](ecosystem-expansion.md)
-* [Phase 4: Research Horizon](research-horizon.md)
+* [Phase 2: Developer Tools](developer-access.md)
+* [Phase 3: Production Integrations](ecosystem-expansion.md)
+* [Phase 4: Advanced Research](research-horizon.md)
