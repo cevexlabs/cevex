@@ -7,7 +7,7 @@
 ![Solidity](https://img.shields.io/badge/solidity-0.8.24-003399?style=flat-square)
 ![Network](https://img.shields.io/badge/network-Base-0052FF?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-001650?style=flat-square)
-![Status](https://img.shields.io/badge/status-source%20ready-1a7fff?style=flat-square)
+![Status](https://img.shields.io/badge/status-deploy%20ready-1a7fff?style=flat-square)
 
 </div>
 
@@ -15,7 +15,7 @@
 
 ## Overview
 
-This directory contains the smart contract source for the CEVEX on-chain identity registry on Base. The registry provides a decentralized, append-only record of provisioned agent identities, backed by Ethereum-secured finality once deployed.
+This directory contains the smart contract source and deployment tooling for the CEVEX on-chain identity registry on Base. The registry provides a decentralized, append-only record of provisioned agent identities, backed by Ethereum-secured finality.
 
 ---
 
@@ -23,8 +23,8 @@ This directory contains the smart contract source for the CEVEX on-chain identit
 
 | Contract | Deployment status | Description |
 |----------|-------------------|-------------|
-| `CevexRegistry` | Source ready | Singleton registry. Manages all agent identity records. |
-| `ICevexRegistry` | Source ready | Interface for external integrators. |
+| `CevexRegistry` | Deploy ready | Singleton registry. Manages all agent identity records. |
+| `ICevexRegistry` | Deploy ready | Interface for external integrators. |
 
 ---
 
@@ -55,40 +55,62 @@ AgentIdentity (struct, stored per agent in registry mapping)
 
 ---
 
-## Source Integration
+## Tooling
 
-The contract source is framework neutral and can be imported into a Hardhat or Foundry workspace.
+The contract workspace uses `solc` for compilation and `ethers` for Base Sepolia deployment scripts.
 
 | File | Purpose |
 |---|---|
 | `CevexRegistry.sol` | Registry implementation |
 | `interfaces/ICevexRegistry.sol` | External integration interface |
+| `scripts/compile.mjs` | Compiles the registry and writes `build/CevexRegistry.json` |
+| `scripts/deploy-base-sepolia.mjs` | Deploys the registry to Base Sepolia |
+| `scripts/demo-base-sepolia.mjs` | Registers a live demo agent and verifies the on-chain record |
 
 ---
 
-## Testing and Deployment
+## Base Sepolia Live Demo
+
+Create a local environment file:
 
 ```bash
-npx hardhat compile
+cp .env.example .env
 ```
+
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Set `DEPLOYER_PRIVATE_KEY` to a funded Base Sepolia test wallet. Do not commit `.env`.
+
+Install dependencies and compile:
 
 ```bash
-forge test
+npm install
+npm run compile
 ```
 
-**Base Sepolia (testnet):**
+Deploy the registry:
 
 ```bash
-npx hardhat deploy --network base-sepolia
+npm run deploy:base-sepolia
 ```
 
-**Base Mainnet:**
+Run the live agent registration demo:
 
 ```bash
-npx hardhat deploy --network base
+npm run demo:base-sepolia
 ```
 
-Canonical deployment addresses are published after the deployment transaction is finalized and verified.
+Run the full path in one command:
+
+```bash
+npm run live:base-sepolia
+```
+
+The scripts write public deployment receipts to `deployments/base-sepolia.json` and `deployments/base-sepolia-demo.json`.
 
 ---
 

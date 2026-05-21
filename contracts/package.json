@@ -1,0 +1,19 @@
+{
+  "name": "@cevex/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CEVEX registry contract deployment tooling",
+  "scripts": {
+    "compile": "node scripts/compile.mjs",
+    "deploy:base-sepolia": "node scripts/deploy-base-sepolia.mjs",
+    "demo:base-sepolia": "node scripts/demo-base-sepolia.mjs",
+    "live:base-sepolia": "npm run compile && npm run deploy:base-sepolia && npm run demo:base-sepolia"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.4.0",
+    "@noble/post-quantum": "^0.2.0",
+    "ethers": "^6.13.5",
+    "solc": "^0.8.24"
+  }
+}
