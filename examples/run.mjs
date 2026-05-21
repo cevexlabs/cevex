@@ -1,408 +1,515 @@
-import { ml_dsa65 }   from '@noble/post-quantum/ml-dsa'
-import { shake256 }    from '@noble/hashes/sha3'
-import { keccak_256 }  from '@noble/hashes/sha3'
+import { ml_dsa65 } from '@noble/post-quantum/ml-dsa'
+import { shake256, keccak_256 } from '@noble/hashes/sha3'
 import { randomBytes } from 'crypto'
 import { performance } from 'perf_hooks'
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
+const argv = process.argv.slice(2)
+const cmd = (argv.find(arg => !arg.startsWith('-')) ?? '').toLowerCase()
+const jsonMode = argv.includes('--json')
+const renderTerminal = !jsonMode
+const colorEnabled = (process.stdout.isTTY || argv.includes('--color')) &&
+  !argv.includes('--no-color') &&
+  renderTerminal &&
+  !process.env.NO_COLOR
 
-const _ = {
-  rst:  '\x1b[0m',
-  bold: '\x1b[1m',
-  dim:  '\x1b[2m',
-  blu:  '\x1b[38;5;39m',
-  lbl:  '\x1b[38;5;33m',
-  grn:  '\x1b[92m',
-  ylw:  '\x1b[38;5;220m',
-  wht:  '\x1b[97m',
-  gry:  '\x1b[90m',
-  dgry: '\x1b[38;5;240m',
-  red:  '\x1b[91m',
-  ann:  '\x1b[38;5;67m',   // muted slate-blue — annotation column
-  cmd:  '\x1b[38;5;252m',  // near-white — command text
+const hexToRgb = hex => {
+  const value = hex.replace('#', '')
+  return [
+    parseInt(value.slice(0, 2), 16),
+    parseInt(value.slice(2, 4), 16),
+    parseInt(value.slice(4, 6), 16),
+  ]
+}
+const fg = hex => {
+  const [r, g, b] = hexToRgb(hex)
+  return text => colorEnabled ? `\x1b[38;2;${r};${g};${b}m${text}\x1b[0m` : text
+}
+const ansi = code => text => colorEnabled ? `\x1b[${code}m${text}\x1b[0m` : text
+const palette = {
+  base: '#0066ff',
+  deep: '#003399',
+  line: '#3d8bff',
+  text: '#eff6ff',
+  body: '#dbeafe',
+  muted: '#8bafc8',
+  soft: '#90aaff',
+  glow: '#5ab4ff',
+  danger: '#cf2e2e',
+}
+const theme = {
+  blue: fg(palette.line),
+  primary: fg(palette.base),
+  deep: fg(palette.deep),
+  cyan: fg(palette.glow),
+  dim: fg(palette.muted),
+  muted: fg(palette.soft),
+  success: fg(palette.glow),
+  danger: fg(palette.danger),
+  white: fg(palette.text),
+  body: fg(palette.body),
+  bold: ansi('1'),
 }
 
-const vis    = s => s.replace(/\x1b\[[0-9;]*m/g, '')
-const vlen   = s => vis(s).length
-const rpad   = (s, n) => s + ' '.repeat(Math.max(0, n - vlen(s)))
-const trunc  = (s, n) => vlen(s) > n ? vis(s).slice(0, n - 1) + '…' : s
-const center = (s, w) => ' '.repeat(Math.max(0, Math.floor((w - vlen(s)) / 2))) + s
+const identity = text => text
+const stripAnsi = text => String(text).replace(/\x1b\[[0-9;]*m/g, '')
+const visibleLength = text => stripAnsi(text).length
+const terminalColumns = process.stdout.columns || 106
+const WIDTH = Math.max(78, Math.min(106, terminalColumns - 2))
+const FIELD_W = 14
+const NOTE_W = Math.max(24, Math.min(32, Math.floor(WIDTH * 0.3)))
+const VALUE_W = WIDTH - FIELD_W - NOTE_W - 10
+const LABEL_W = 22
+const COMMAND_W = WIDTH - LABEL_W - 7
 
-// ─── Box constants ────────────────────────────────────────────────────────────
-//
-//  Data rows: │  key(K_W)   val(V_W)  │  annotation(A_W)  │
-//
-//  1+2+K_W+3+V_W+2+1+2+A_W+2+1 = 14+K_W+V_W+A_W = 14+13+51+38 = 116 = W ✓
-
-const W   = 116
-const K_W = 13   // 'Trusted party' = 13 chars — longest key
-const V_W = 51
-const A_W = 38
-const C_W = W - 6  // = 110
-
-const DIV      = 1 + 2 + K_W + 3 + V_W + 2 + 1  // 73
-const L_DASHES = DIV - 2                           // 71
-const R_DASHES = W - DIV - 1                       // 42
-
-// ─── Drawing primitives ───────────────────────────────────────────────────────
-
-const bTop = () => _.blu + '╔' + '═'.repeat(W - 2) + '╗' + _.rst
-const bBot = () => _.blu + '╚' + '═'.repeat(W - 2) + '╝' + _.rst
-const bRow = (txt = '') =>
-  _.blu + '║' + _.rst + '  ' + rpad(trunc(txt, C_W), C_W) + '  ' + _.blu + '║' + _.rst
-
-const sTop = (label) => {
-  const d = W - 5 - vlen(label)
-  return _.lbl + '┌─ ' + _.rst + _.bold + _.ylw + label + _.rst +
-         ' ' + _.lbl + '─'.repeat(Math.max(1, d)) + '┐' + _.rst
-}
-const sBot  = () => _.lbl + '└' + '─'.repeat(L_DASHES) + '┴' + '─'.repeat(R_DASHES) + '┘' + _.rst
-const sSep  = () => _.lbl + '├' + '─'.repeat(L_DASHES) + '┼' + '─'.repeat(R_DASHES) + '┤' + _.rst
-const sEmp  = () => _.lbl + '│' + ' '.repeat(L_DASHES) + '│' + ' '.repeat(R_DASHES) + '│' + _.rst
-
-// Three-column data row
-const sRow = (key, val, annot = '') => {
-  const k     = rpad(_.gry + key + _.rst, K_W)
-  const v     = rpad(trunc(val, V_W), V_W)
-  const aText = annot ? _.ann + trunc(annot, A_W) + _.rst : ''
-  const a     = rpad(aText, A_W)
-  return _.lbl + '│' + _.rst + '  ' + k + '   ' + v + '  ' +
-         _.lbl + '│' + _.rst + '  ' + a + '  ' + _.lbl + '│' + _.rst
+function clip(text, width) {
+  const clean = stripAnsi(text)
+  if (clean.length <= width) return clean
+  if (width <= 3) return clean.slice(0, width)
+  return clean.slice(0, width - 3) + '...'
 }
 
-// Full-width single-column row (no divider) — used for command listings
-// Layout: │  label(L_W)   value(R_W)  │   where 1+2+L_W+3+R_W+2+1 = W
-const L_W = 22
-const R_W = W - 9 - L_W   // = 85
-const wRow = (label, value, hilite = false) => {
-  const l = rpad((hilite ? _.ylw : _.gry) + label + _.rst, L_W)
-  const v = rpad(trunc(hilite ? _.cmd + value + _.rst : _.dgry + value + _.rst, R_W), R_W)
-  return _.lbl + '│' + _.rst + '  ' + l + '   ' + v + '  ' + _.lbl + '│' + _.rst
+function padAnsi(text, width) {
+  return text + ' '.repeat(Math.max(0, width - visibleLength(text)))
 }
-const wEmp = () => _.lbl + '│' + ' '.repeat(W - 2) + '│' + _.rst
-const wSep = () => _.lbl + '├' + '─'.repeat(W - 2) + '┤' + _.rst
-const wBot = () => _.lbl + '└' + '─'.repeat(W - 2) + '┘' + _.rst
 
-// ─── ASCII Logo ───────────────────────────────────────────────────────────────
+function cell(text, width, style = identity) {
+  return padAnsi(style(clip(text, width)), width)
+}
 
-const LOGO = [
-  '  ██████╗███████╗██╗   ██╗███████╗██╗  ██╗',
-  ' ██╔════╝██╔════╝██║   ██║██╔════╝╚██╗██╔╝',
-  ' ██║     █████╗  ██║   ██║█████╗   ╚███╔╝ ',
-  ' ██║     ██╔══╝  ╚██╗ ██╔╝██╔══╝   ██╔██╗ ',
-  ' ╚██████╗███████╗ ╚████╔╝ ███████╗██╔╝ ██╗',
-  '  ╚═════╝╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝',
-].map(l => _.blu + l + _.rst)
+function center(text, width) {
+  const clean = clip(text, width)
+  const left = Math.max(0, Math.floor((width - clean.length) / 2))
+  return ' '.repeat(left) + clean + ' '.repeat(Math.max(0, width - clean.length - left))
+}
 
-// ─── Utils ────────────────────────────────────────────────────────────────────
+function line(char = '-') {
+  return theme.blue('+' + char.repeat(WIDTH - 2) + '+')
+}
 
-const toHex = b => Buffer.from(b).toString('hex')
-const abbr  = h => _.dgry + h.slice(0, 8) + '…' + h.slice(-8) + _.rst
+function titleLine(title) {
+  const label = ` ${title} `
+  return theme.blue('+') +
+    theme.blue(' ') +
+    theme.white(title) +
+    theme.blue(' ' + '-'.repeat(Math.max(0, WIDTH - label.length - 2)) + '+')
+}
 
-function deriveAddress(pk) {
-  const hash = keccak_256(pk)
-  const raw  = toHex(hash.slice(12))
-  const h    = raw.toLowerCase()
-  const ch   = toHex(keccak_256(new TextEncoder().encode(h)))
-  let out = '0x'
-  for (let i = 0; i < h.length; i++)
-    out += parseInt(ch[i], 16) >= 8 ? h[i].toUpperCase() : h[i]
-  return out
+function row(text = '', style = identity) {
+  return theme.blue('|') + ' ' + cell(text, WIDTH - 4, style) + ' ' + theme.blue('|')
+}
+
+function tableLine() {
+  return theme.blue(
+    '+' +
+    '-'.repeat(FIELD_W + 2) +
+    '+' +
+    '-'.repeat(VALUE_W + 2) +
+    '+' +
+    '-'.repeat(NOTE_W + 2) +
+    '+',
+  )
+}
+
+function tableRow(field, value, note, valueStyle = theme.white, noteStyle = theme.muted) {
+  return theme.blue('|') + ' ' +
+    cell(field, FIELD_W, theme.dim) + ' ' +
+    theme.blue('|') + ' ' +
+    cell(value, VALUE_W, valueStyle) + ' ' +
+    theme.blue('|') + ' ' +
+    cell(note, NOTE_W, noteStyle) + ' ' +
+    theme.blue('|')
+}
+
+function section(title, rows) {
+  if (!renderTerminal) return
+  console.log(titleLine(title))
+  console.log(tableRow('Field', 'Value', 'Evidence', theme.bold, theme.bold))
+  console.log(tableLine())
+  for (const item of rows) {
+    if (item === 'sep') {
+      console.log(tableLine())
+      continue
+    }
+    console.log(tableRow(item.field, item.value, item.note, item.valueStyle, item.noteStyle))
+  }
+  console.log(tableLine())
+  console.log()
+}
+
+function commandLine() {
+  return theme.blue(
+    '+' +
+    '-'.repeat(LABEL_W + 2) +
+    '+' +
+    '-'.repeat(COMMAND_W + 2) +
+    '+',
+  )
+}
+
+function commandRow(label, command, labelStyle = theme.primary, commandStyle = theme.body) {
+  return theme.blue('|') + ' ' +
+    cell(label, LABEL_W, labelStyle) + ' ' +
+    theme.blue('|') + ' ' +
+    cell(command, COMMAND_W, commandStyle) + ' ' +
+    theme.blue('|')
+}
+
+const WORDMARK = [
+  '   ____ _______     _______ __  __',
+  '  / ___| ____\\ \\   / / ____| \\/ /',
+  ' | |   |  _|  \\ \\ / /|  _|  \\  / ',
+  ' | |___| |___  \\ V / | |___ /  \\ ',
+  '  \\____|_____|  \\_/  |_____/_/\\_\\',
+]
+
+function showBanner() {
+  if (!renderTerminal) return
+  console.log()
+  console.log(line())
+  console.log(row())
+  for (const logoLine of WORDMARK) {
+    console.log(row(center(logoLine, WIDTH - 4), theme.blue))
+  }
+  console.log(row())
+  console.log(row(center('Post-quantum identity for autonomous AI agents', WIDTH - 4), theme.bold))
+  console.log(row(center('ML-DSA-65 / NIST FIPS 204 / Base registry compatible', WIDTH - 4), theme.dim))
+  console.log(row(center('Local protocol validation - no network calls', WIDTH - 4), theme.muted))
+  console.log(row())
+  console.log(line())
+  console.log()
+}
+
+const toHex = bytes => Buffer.from(bytes).toString('hex')
+const digestHex = bytes => toHex(shake256(bytes, { dkLen: 32 }))
+const abbr = (hex, left = 10, right = 10) => `${hex.slice(0, left)}...${hex.slice(-right)}`
+const ms = value => `${value.toFixed(2)} ms`
+
+function deriveAddress(publicKey) {
+  const hash = keccak_256(publicKey)
+  const raw = toHex(hash.slice(12)).toLowerCase()
+  const checksumHash = toHex(keccak_256(new TextEncoder().encode(raw)))
+
+  let address = '0x'
+  for (let i = 0; i < raw.length; i += 1) {
+    address += parseInt(checksumHash[i], 16) >= 8 ? raw[i].toUpperCase() : raw[i]
+  }
+  return address
 }
 
 function buildSignedBytes({ agentAddress, nonce, timestamp, action }) {
-  const PREFIX = new TextEncoder().encode('CEVEX-MSG-v1')
-  const addr   = Buffer.from(agentAddress.slice(2), 'hex')
-  const buf    = new Uint8Array(PREFIX.length + 1 + 20 + 8 + 8 + 4 + action.length)
-  let off = 0
-  buf.set(PREFIX, off); off += PREFIX.length
-  buf[off++] = 0x01
-  buf.set(addr, off); off += 20
-  const u64 = v => {
-    const hi = Number((v >> 32n) & 0xffffffffn), lo = Number(v & 0xffffffffn)
-    buf[off]=(hi>>>24)&0xff; buf[off+1]=(hi>>>16)&0xff
-    buf[off+2]=(hi>>>8)&0xff;  buf[off+3]=hi&0xff
-    buf[off+4]=(lo>>>24)&0xff; buf[off+5]=(lo>>>16)&0xff
-    buf[off+6]=(lo>>>8)&0xff;  buf[off+7]=lo&0xff
-    off += 8
+  const prefix = new TextEncoder().encode('CEVEX-MSG-v1')
+  const address = Buffer.from(agentAddress.slice(2), 'hex')
+  const buffer = new Uint8Array(prefix.length + 1 + 20 + 8 + 8 + 4 + action.length)
+  let offset = 0
+
+  buffer.set(prefix, offset)
+  offset += prefix.length
+  buffer[offset] = 0x01
+  offset += 1
+  buffer.set(address, offset)
+  offset += 20
+
+  const writeUint64 = value => {
+    const n = BigInt(value)
+    const hi = Number((n >> 32n) & 0xffffffffn)
+    const lo = Number(n & 0xffffffffn)
+    buffer[offset] = (hi >>> 24) & 0xff
+    buffer[offset + 1] = (hi >>> 16) & 0xff
+    buffer[offset + 2] = (hi >>> 8) & 0xff
+    buffer[offset + 3] = hi & 0xff
+    buffer[offset + 4] = (lo >>> 24) & 0xff
+    buffer[offset + 5] = (lo >>> 16) & 0xff
+    buffer[offset + 6] = (lo >>> 8) & 0xff
+    buffer[offset + 7] = lo & 0xff
+    offset += 8
   }
-  u64(BigInt(nonce)); u64(BigInt(timestamp))
-  const len = action.length
-  buf[off++]=(len>>>24)&0xff; buf[off++]=(len>>>16)&0xff
-  buf[off++]=(len>>>8)&0xff;  buf[off++]=len&0xff
-  buf.set(action, off)
-  return buf
-}
 
-// ─── Sections ─────────────────────────────────────────────────────────────────
+  writeUint64(nonce)
+  writeUint64(timestamp)
 
-function showBanner() {
-  console.log()
-  console.log(bTop())
-  console.log(bRow())
-  for (const l of LOGO) console.log(bRow(center(l, C_W)))
-  console.log(bRow())
-  console.log(bRow(center(_.bold + _.wht + 'Post-Quantum Identity for Autonomous AI Agents' + _.rst, C_W)))
-  console.log(bRow(center(_.dgry + 'CRYSTALS-Dilithium  ·  Base L2  ·  NIST FIPS 204  ·  ML-DSA-65' + _.rst, C_W)))
-  console.log(bRow())
-  console.log(bBot())
-  console.log()
+  const length = action.length
+  buffer[offset] = (length >>> 24) & 0xff
+  buffer[offset + 1] = (length >>> 16) & 0xff
+  buffer[offset + 2] = (length >>> 8) & 0xff
+  buffer[offset + 3] = length & 0xff
+  offset += 4
+
+  buffer.set(action, offset)
+  return buffer
 }
 
 function runKeygen() {
-  console.log(sTop('[ 1 / 3 ]  KEY GENERATION'))
-  console.log(sEmp())
-  const t0 = performance.now()
+  const started = performance.now()
   const seed = shake256(randomBytes(64), { dkLen: 32 })
   const { publicKey, secretKey } = ml_dsa65.keygen(seed)
   const agentAddress = deriveAddress(publicKey)
-  const t1 = performance.now()
-  console.log(sRow('Scheme',
-    _.blu + 'CRYSTALS-Dilithium' + _.rst + _.dgry + '  ·  NIST FIPS 204 / ML-DSA-65' + _.rst,
-    'NIST-standardized lattice signature'))
-  console.log(sRow('Security',
-    _.ylw + '162-bit post-quantum' + _.rst + _.dgry + '  ·  Module LWE hardness' + _.rst,
-    "Immune to Shor's & Grover's algorithms"))
-  console.log(sRow('Entropy',
-    _.dgry + 'OS CSPRNG  ·  SHAKE-256 conditioned' + _.rst,
-    'SHAKE-256 KDF over OS CSPRNG seed'))
-  console.log(sSep())
-  console.log(sRow('Public key',
-    _.bold + _.wht + publicKey.length + ' bytes' + _.rst + '  ' + abbr(toHex(publicKey)),
-    'Safe to publish · verifiers need this'))
-  console.log(sRow('Secret key',
-    _.bold + _.wht + secretKey.length + ' bytes' + _.rst + '  ' + abbr(toHex(secretKey)),
-    'Never leaves this process'))
-  console.log(sRow('Address',
-    _.bold + _.wht + agentAddress + _.rst,
-    'EIP-55 checksummed · on-chain identity'))
-  console.log(sSep())
-  console.log(sRow('Time',
-    _.grn + (t1 - t0).toFixed(2) + ' ms' + _.rst,
-    'Includes SHAKE-256 KDF conditioning'))
-  console.log(sEmp())
-  console.log(sBot())
-  console.log()
-  return { publicKey, secretKey, agentAddress, ms: t1 - t0 }
+  const publicKeyHash = digestHex(publicKey)
+  const elapsed = performance.now() - started
+
+  section('[1/3] Key Generation', [
+    { field: 'Scheme', value: 'CRYSTALS-Dilithium / ML-DSA-65', note: 'NIST FIPS 204' },
+    { field: 'Security', value: '162-bit post-quantum target', note: 'Module LWE' },
+    { field: 'Entropy', value: 'OS CSPRNG -> SHAKE-256 seed', note: 'local demo mode' },
+    'sep',
+    { field: 'Public key', value: `${publicKey.length} bytes`, note: `hash ${abbr(publicKeyHash, 8, 8)}` },
+    { field: 'Secret key', value: `${secretKey.length} bytes  redacted`, note: 'never printed' },
+    { field: 'Address', value: agentAddress, note: 'keccak256(pk)[12..32]' },
+    'sep',
+    { field: 'Elapsed', value: ms(elapsed), note: 'seed + keypair', valueStyle: theme.success },
+  ])
+
+  return { publicKey, secretKey, publicKeyHash, agentAddress, ms: elapsed }
 }
 
-function runSign(kg) {
-  console.log(sTop('[ 2 / 3 ]  SIGNING'))
-  console.log(sEmp())
-  const action    = new TextEncoder().encode(JSON.stringify({
-    type: 'transfer', amount: '100', token: 'USDC',
-    to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', network: 'base',
-  }))
-  const nonce     = 1
+function runSign(keygen) {
+  const payload = {
+    type: 'transfer',
+    amount: '100',
+    token: 'USDC',
+    to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+    network: 'base',
+  }
+  const action = new TextEncoder().encode(JSON.stringify(payload))
+  const nonce = 1
   const timestamp = Date.now()
-  const msgBytes  = buildSignedBytes({ agentAddress: kg.agentAddress, nonce, timestamp, action })
-  const t2 = performance.now()
-  const signature = ml_dsa65.sign(kg.secretKey, msgBytes)
-  const t3 = performance.now()
-  console.log(sRow('Action',
-    _.dgry + '{"type":"transfer","amount":"100","token":"USDC",…}' + _.rst,
-    'Arbitrary JSON payload bound into sig'))
-  console.log(sRow('Nonce',
-    _.bold + _.wht + String(nonce) + _.rst,
-    'Monotonic counter · prevents replay'))
-  console.log(sRow('Timestamp',
-    _.dgry + new Date(timestamp).toISOString() + _.rst,
-    'UTC wall-clock · freshness enforced'))
-  console.log(sRow('Domain',
-    _.blu + '"CEVEX-MSG-v1"' + _.rst + _.dgry + '  ·  replay protection prefix' + _.rst,
-    'Protocol binding · prevents cross-use'))
-  console.log(sSep())
-  console.log(sRow('Signature',
-    _.bold + _.wht + signature.length + ' bytes' + _.rst + '  ' + abbr(toHex(signature)),
-    '52x larger than ECDSA · quantum-safe'))
-  console.log(sSep())
-  console.log(sRow('Time',
-    _.grn + (t3 - t2).toFixed(2) + ' ms' + _.rst,
-    'Sub-15ms per sig · viable for agents'))
-  console.log(sEmp())
-  console.log(sBot())
-  console.log()
-  return { signature, msgBytes, nonce, timestamp, ms: t3 - t2 }
+  const signedBytes = buildSignedBytes({
+    agentAddress: keygen.agentAddress,
+    nonce,
+    timestamp,
+    action,
+  })
+
+  const started = performance.now()
+  const signature = ml_dsa65.sign(keygen.secretKey, signedBytes)
+  const signedBytesHash = digestHex(signedBytes)
+  const signatureHash = digestHex(signature)
+  const elapsed = performance.now() - started
+
+  section('[2/3] Message Signing', [
+    { field: 'Payload', value: 'transfer 100 USDC on Base', note: 'JSON action' },
+    { field: 'Nonce', value: String(nonce), note: 'replay guard' },
+    { field: 'Timestamp', value: new Date(timestamp).toISOString(), note: 'UTC ms' },
+    { field: 'Domain', value: 'CEVEX-MSG-v1', note: 'protocol binding', valueStyle: theme.cyan },
+    'sep',
+    { field: 'Signed bytes', value: `${signedBytes.length} bytes`, note: `hash ${abbr(signedBytesHash, 8, 8)}` },
+    { field: 'Signature', value: `${signature.length} bytes`, note: `hash ${abbr(signatureHash, 8, 8)}` },
+    'sep',
+    { field: 'Elapsed', value: ms(elapsed), note: 'signature time', valueStyle: theme.success },
+  ])
+
+  return {
+    signature,
+    signatureHash,
+    signedBytes,
+    signedBytesHash,
+    action,
+    nonce,
+    timestamp,
+    ms: elapsed,
+  }
 }
 
-function runVerify(kg, sg) {
-  console.log(sTop('[ 3 / 3 ]  VERIFICATION'))
-  console.log(sEmp())
-  const t4 = performance.now()
-  const valid    = ml_dsa65.verify(kg.publicKey, sg.msgBytes, sg.signature)
-  const t5       = performance.now()
-  const tampered = new Uint8Array(sg.signature); tampered[42] ^= 0x01
-  const tamperOk = ml_dsa65.verify(kg.publicKey, sg.msgBytes, tampered)
-  console.log(sRow('Input',
-    _.dgry + 'public key  ·  signed bytes  ·  signature' + _.rst,
-    'Three inputs · no external lookup'))
-  console.log(sRow('Trusted party',
-    _.bold + _.ylw + 'none' + _.rst + _.dgry + '  ·  pure lattice math, no CA' + _.rst,
-    'Any node can verify independently'))
-  console.log(sSep())
-  console.log(sRow('Result',
-    valid    ? _.bold + _.grn + '✓  VALID'        + _.rst : _.bold + _.red + '✗  INVALID'      + _.rst,
-    valid    ? 'Verified by pure lattice math alone'       : 'Verification failed · investigate'))
-  console.log(sRow('Tamper test',
-    _.dgry + 'flip 1 bit  ·  ' + _.rst +
-      (!tamperOk ? _.bold + _.grn + '✗  REJECTED' + _.rst : _.bold + _.red + 'PASSED (BUG)' + _.rst) +
-      _.dgry + '  (expected)' + _.rst,
-    !tamperOk ? '1-bit flip triggers full rejection' : 'WARNING: tamper was not detected'))
-  console.log(sSep())
-  console.log(sRow('Time',
-    _.grn + (t5 - t4).toFixed(2) + ' ms' + _.rst,
-    'ML-DSA verify ~3x faster than sign'))
-  console.log(sEmp())
-  console.log(sBot())
-  console.log()
-  return { valid, tamperOk, ms: t5 - t4 }
+function runVerify(keygen, signing) {
+  const started = performance.now()
+  const valid = ml_dsa65.verify(keygen.publicKey, signing.signedBytes, signing.signature)
+  const elapsed = performance.now() - started
+
+  const tampered = new Uint8Array(signing.signature)
+  tampered[42] ^= 0x01
+  const signatureTamperAccepted = ml_dsa65.verify(keygen.publicKey, signing.signedBytes, tampered)
+
+  const tamperedMessage = new Uint8Array(signing.signedBytes)
+  tamperedMessage[tamperedMessage.length - 1] ^= 0x01
+  const messageTamperAccepted = ml_dsa65.verify(keygen.publicKey, tamperedMessage, signing.signature)
+
+  section('[3/3] Verification', [
+    { field: 'Input', value: 'public key + signed bytes + signature', note: 'no CA' },
+    { field: 'Lookup', value: 'in-memory public key', note: 'registry-free demo' },
+    { field: 'Trust anchor', value: 'none', note: 'local lattice math', valueStyle: theme.cyan },
+    'sep',
+    {
+      field: 'Signature',
+      value: valid ? 'VALID' : 'INVALID',
+      note: 'ML-DSA verify',
+      valueStyle: valid ? theme.success : theme.danger,
+    },
+    {
+      field: 'Sig tamper',
+      value: signatureTamperAccepted ? 'FAILED' : 'REJECTED',
+      note: 'single bit flip',
+      valueStyle: signatureTamperAccepted ? theme.danger : theme.success,
+    },
+    {
+      field: 'Msg tamper',
+      value: messageTamperAccepted ? 'FAILED' : 'REJECTED',
+      note: 'payload bit flip',
+      valueStyle: messageTamperAccepted ? theme.danger : theme.success,
+    },
+    'sep',
+    { field: 'Elapsed', value: ms(elapsed), note: 'verification time', valueStyle: theme.success },
+  ])
+
+  return { valid, signatureTamperAccepted, messageTamperAccepted, ms: elapsed }
 }
 
-function showSummary(kg, sg, vr) {
-  const total = kg.ms + sg.ms + vr.ms
+function showSummary(keygen, signing, verification) {
+  const total = keygen.ms + signing.ms + verification.ms
+  const passed = verification.valid &&
+    !verification.signatureTamperAccepted &&
+    !verification.messageTamperAccepted
 
-  // ── Stats ─────────────────────────────────────────────────────────────────
-  console.log(sTop('SUMMARY'))
-  console.log(sEmp())
-  console.log(sRow('Total time',
-    _.grn + total.toFixed(2) + ' ms' + _.rst + _.dgry + '  ·  keygen + sign + verify' + _.rst,
-    'Full cycle under 30ms on commodity HW'))
-  console.log(sRow('Quantum-safe',
-    _.bold + _.grn + 'yes' + _.rst + _.dgry + "  ·  Shor's algorithm cannot break this" + _.rst,
-    'Survives large-scale quantum computers'))
-  console.log(sRow('Replay-proof',
-    _.bold + _.grn + 'yes' + _.rst + _.dgry + '  ·  nonce + timestamp + domain prefix' + _.rst,
-    'Triple-lock: nonce, timestamp, domain'))
-  console.log(sRow('Trustless',
-    _.bold + _.grn + 'yes' + _.rst + _.dgry + '  ·  any party can verify with the pubkey' + _.rst,
-    'No CA, PKI, or oracle dependency'))
-  console.log(sRow('On-chain',
-    _.dgry + 'agentAddress → CevexRegistry.sol on Base' + _.rst,
-    'Address maps to PQ pubkey on Base L2'))
-  console.log(sEmp())
-  console.log(sBot())
+  section('Summary', [
+    {
+      field: 'Run result',
+      value: passed ? 'PASS' : 'FAIL',
+      note: passed ? 'all checks passed' : 'investigate output',
+      valueStyle: passed ? theme.success : theme.danger,
+    },
+    { field: 'Total time', value: ms(total), note: 'keygen + sign + verify', valueStyle: theme.success },
+    { field: 'PQC scheme', value: 'CRYSTALS-Dilithium / ML-DSA-65', note: 'default path' },
+    { field: 'Identity', value: keygen.agentAddress, note: 'registry-ready' },
+    { field: 'Artifacts', value: 'none written to disk', note: 'demo is memory-only' },
+  ])
+}
+
+function showCliReference() {
+  if (!renderTerminal) return
+  console.log(titleLine('CLI Reference'))
+  console.log(commandRow('Command', 'Example', theme.bold, theme.bold))
+  console.log(commandLine())
+  console.log(commandRow('install', 'npm install -g @cevex/cli', theme.dim, theme.dim))
+  console.log(commandRow('provision', 'cevex provision --entropy software --scheme dilithium3 --out agent.key'))
+  console.log(commandRow('sign', 'cevex sign --key agent.key --message message.json --out signed.json'))
+  console.log(commandRow('verify', 'cevex verify --message signed.json --network base'))
+  console.log(commandRow('info', 'cevex info 0xAgentAddress --network base'))
+  console.log(commandRow('rotate', 'cevex rotate --key agent.key --entropy software --out rotated.key'))
+  console.log(commandRow('revoke', 'cevex revoke --key agent.key --reason decommissioned --yes'))
+  console.log(commandRow('batch-verify', 'cevex batch-verify --messages signed-batch.json'))
+  console.log(commandLine())
   console.log()
 
-  // ── CLI Reference ─────────────────────────────────────────────────────────
-  console.log(sTop('CLI REFERENCE'))
-  console.log(wEmp())
-  console.log(wRow('install',
-    'npm install -g @cevex/cli'))
-  console.log(wEmp())
-  console.log(wRow('provision',
-    'cevex provision --scheme dilithium3 --out agent.key',        true))
-  console.log(wRow('sign',
-    "cevex sign --keyfile agent.key --action '{\"type\":\"transfer\",…}'", true))
-  console.log(wRow('verify',
-    'cevex verify --pubkey <hex> --sig <hex>',                    true))
-  console.log(wRow('info',
-    'cevex info --keyfile agent.key',                             true))
-  console.log(wRow('rotate',
-    'cevex rotate --keyfile agent.key --registry base',           true))
-  console.log(wRow('revoke',
-    'cevex revoke --keyfile agent.key',                           true))
-  console.log(wRow('batch-verify',
-    'cevex batch-verify --input sigs.jsonl',                      true))
-  console.log(wEmp())
-  console.log(wSep())
-  console.log(wEmp())
-
-  // ── Demo sub-commands ──────────────────────────────────────────────────────
-  console.log(wRow(_.bold + _.ylw + 'DEMO COMMANDS' + _.rst, ''))
-  console.log(wEmp())
-  console.log(wRow('node run.mjs',
-    'Full demo  ·  keygen → sign → verify → summary   ← you are here'))
-  console.log(wRow('node run.mjs keygen',
-    'Step 1 only  ·  generate a post-quantum keypair'))
-  console.log(wRow('node run.mjs sign',
-    'Steps 1-2  ·  keygen + sign a transfer payload'))
-  console.log(wRow('node run.mjs verify',
-    'Steps 1-3  ·  keygen + sign + verify + tamper test'))
-  console.log(wRow('node run.mjs help',
-    'Show the help screen'))
-  console.log(wEmp())
-  console.log(wRow('',
-    _.dgry + 'github.com/cevexlabs/Cevex  ·  x.com/CevexLabs' + _.rst))
-  console.log(wEmp())
-  console.log(wBot())
+  console.log(titleLine('Demo Commands'))
+  console.log(commandRow('Command', 'Description', theme.bold, theme.bold))
+  console.log(commandLine())
+  console.log(commandRow('node run.mjs', 'full protocol validation'))
+  console.log(commandRow('node run.mjs keygen', 'run key generation only'))
+  console.log(commandRow('node run.mjs sign', 'run key generation and signing'))
+  console.log(commandRow('node run.mjs verify', 'run key generation, signing, and verification'))
+  console.log(commandRow('node run.mjs help', 'show this screen'))
+  console.log(commandRow('--json', 'emit machine-readable validation result'))
+  console.log(commandRow('--color / --no-color', 'force or disable branded terminal colors'))
+  console.log(commandLine())
   console.log()
 }
 
 function showHelp() {
-  console.log()
-  console.log(bTop())
-  console.log(bRow())
-  for (const l of LOGO) console.log(bRow(center(l, C_W)))
-  console.log(bRow())
-  console.log(bRow(center(_.bold + _.wht + 'Post-Quantum Identity for Autonomous AI Agents' + _.rst, C_W)))
-  console.log(bRow())
-  console.log(bBot())
-  console.log()
-
-  console.log(sTop('HELP  ·  node run.mjs [command]'))
-  console.log(wEmp())
-  console.log(wRow(_.bold + _.wht + 'ABOUT' + _.rst, ''))
-  console.log(wEmp())
-  console.log(wRow('',
-    'Live demonstration of the CEVEX post-quantum identity protocol.'))
-  console.log(wRow('',
-    'Generates a real ML-DSA-65 keypair, signs a transfer payload,'))
-  console.log(wRow('',
-    'and verifies the signature · all on your machine, no network needed.'))
-  console.log(wEmp())
-  console.log(wSep())
-  console.log(wEmp())
-  console.log(wRow(_.bold + _.wht + 'COMMANDS' + _.rst, ''))
-  console.log(wEmp())
-  console.log(wRow('(no argument)',  'Full demo · all three steps + summary + CLI reference', true))
-  console.log(wRow('keygen',         'Key generation only · derive a PQ keypair and address',  true))
-  console.log(wRow('sign',           'Keygen + signing · create and display a real signature',  true))
-  console.log(wRow('verify',         'Keygen + sign + verify · includes tamper-detection test', true))
-  console.log(wRow('help',           'Show this screen',                                        true))
-  console.log(wEmp())
-  console.log(wSep())
-  console.log(wEmp())
-  console.log(wRow(_.bold + _.wht + 'CRYPTO DETAILS' + _.rst, ''))
-  console.log(wEmp())
-  console.log(wRow('Scheme',       'CRYSTALS-Dilithium  (ML-DSA-65)  ·  NIST FIPS 204'))
-  console.log(wRow('Security',     '162-bit post-quantum · Module LWE lattice hardness assumption'))
-  console.log(wRow('Key sizes',    'Public key 1952 B  ·  Secret key 4032 B  ·  Signature 3309 B'))
-  console.log(wRow('Wire format',  'CEVEX-MSG-v1 | version | address(20) | nonce(8) | ts(8) | action'))
-  console.log(wRow('Address',      'keccak_256(pubkey).slice(12)  ·  EIP-55 checksum  ·  0x...'))
-  console.log(wEmp())
-  console.log(wSep())
-  console.log(wEmp())
-  console.log(wRow('',
-    _.dgry + 'github.com/cevexlabs/Cevex  ·  x.com/CevexLabs' + _.rst))
-  console.log(wEmp())
-  console.log(wBot())
-  console.log()
+  showBanner()
+  section('About', [
+    { field: 'Purpose', value: 'local CEVEX protocol validation', note: 'developer demo' },
+    { field: 'Crypto', value: 'real ML-DSA-65 keygen/sign/verify', note: '@noble/post-quantum' },
+    { field: 'Network', value: 'none', note: 'runs offline' },
+    { field: 'Secrets', value: 'held in memory, never printed', note: 'redacted output' },
+  ])
+  showCliReference()
 }
 
-// ─── Entry point ──────────────────────────────────────────────────────────────
+function emitHelpJson() {
+  console.log(JSON.stringify({
+    command: 'node run.mjs [mode] [options]',
+    modes: {
+      full: 'run key generation, signing, verification, and summary',
+      keygen: 'run key generation only',
+      sign: 'run key generation and signing',
+      verify: 'run key generation, signing, and verification',
+      help: 'show usage information',
+    },
+    options: {
+      json: 'emit machine-readable validation result',
+      color: 'force branded terminal colors',
+      noColor: 'disable terminal colors',
+    },
+  }, null, 2))
+}
 
-const cmd = (process.argv[2] ?? '').toLowerCase()
+function emitJson({ keygen, signing, verification, mode }) {
+  const passed = verification
+    ? verification.valid &&
+      !verification.signatureTamperAccepted &&
+      !verification.messageTamperAccepted
+    : true
+
+  const payload = {
+    protocol: 'CEVEX-MSG-v1',
+    mode,
+    result: passed ? 'PASS' : 'FAIL',
+    scheme: 'ML-DSA-65',
+    network: 'offline',
+    agentAddress: keygen.agentAddress,
+    publicKeyHash: keygen.publicKeyHash,
+    messageHash: signing?.signedBytesHash,
+    signatureHash: signing?.signatureHash,
+    checks: verification
+      ? {
+          signatureValid: verification.valid,
+          signatureTamperRejected: !verification.signatureTamperAccepted,
+          messageTamperRejected: !verification.messageTamperAccepted,
+        }
+      : undefined,
+    timingsMs: {
+      keygen: Number(keygen.ms.toFixed(3)),
+      signing: signing ? Number(signing.ms.toFixed(3)) : undefined,
+      verification: verification ? Number(verification.ms.toFixed(3)) : undefined,
+    },
+    artifacts: [],
+  }
+
+  console.log(JSON.stringify(payload, null, 2))
+}
 
 if (cmd === 'help') {
-  showHelp()
+  if (jsonMode) emitHelpJson()
+  else showHelp()
   process.exit(0)
 }
 
-if (cmd !== '' && !['keygen', 'sign', 'verify'].includes(cmd)) {
-  console.error(`\n  ${_.red}Unknown command: "${cmd}"${_.rst}`)
-  console.error(`  Run ${_.ylw}node run.mjs help${_.rst} for available commands.\n`)
+if (cmd && !['keygen', 'sign', 'verify'].includes(cmd)) {
+  console.error()
+  console.error(theme.danger(`Unknown command: ${cmd}`))
+  console.error(`Run ${theme.primary('node run.mjs help')} for available commands.`)
+  console.error()
   process.exit(1)
 }
 
 showBanner()
 
-const kg = runKeygen()
-if (cmd === 'keygen') process.exit(0)
+const keygen = runKeygen()
+if (cmd === 'keygen') {
+  if (jsonMode) emitJson({ keygen, mode: 'keygen' })
+  process.exit(0)
+}
 
-const sg = runSign(kg)
-if (cmd === 'sign') process.exit(0)
+const signing = runSign(keygen)
+if (cmd === 'sign') {
+  if (jsonMode) emitJson({ keygen, signing, mode: 'sign' })
+  process.exit(0)
+}
 
-const vr = runVerify(kg, sg)
-if (cmd === 'verify') process.exit(0)
+const verification = runVerify(keygen, signing)
+const passed = verification.valid &&
+  !verification.signatureTamperAccepted &&
+  !verification.messageTamperAccepted
+if (cmd === 'verify') {
+  if (jsonMode) emitJson({ keygen, signing, verification, mode: 'verify' })
+  process.exit(passed ? 0 : 1)
+}
 
-showSummary(kg, sg, vr)
+showSummary(keygen, signing, verification)
+showCliReference()
+
+if (jsonMode) {
+  emitJson({ keygen, signing, verification, mode: 'full' })
+}
+
+if (!passed) {
+  process.exitCode = 1
+}
