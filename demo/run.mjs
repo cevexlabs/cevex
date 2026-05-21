@@ -4,62 +4,61 @@ import { keccak_256 }  from '@noble/hashes/sha3'
 import { randomBytes } from 'crypto'
 import { performance } from 'perf_hooks'
 
-// ─── ANSI ─────────────────────────────────────────────────────────────────────
+// ─── Colors ───────────────────────────────────────────────────────────────────
 
 const _ = {
   rst:  '\x1b[0m',
   bold: '\x1b[1m',
   dim:  '\x1b[2m',
-  cyn:  '\x1b[96m',
-  blu:  '\x1b[94m',
+  blu:  '\x1b[38;5;39m',    // clean medium blue — logo + borders
+  lbl:  '\x1b[38;5;33m',    // slightly deeper blue — section headers
   grn:  '\x1b[92m',
-  ylw:  '\x1b[93m',
+  ylw:  '\x1b[38;5;220m',   // warm gold
   wht:  '\x1b[97m',
   gry:  '\x1b[90m',
+  dgry: '\x1b[38;5;240m',
   red:  '\x1b[91m',
 }
 
 const vis = s => s.replace(/\x1b\[[0-9;]*m/g, '')
 const pad = (s, n) => s + ' '.repeat(Math.max(0, n - vis(s).length))
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
+// ─── Box drawing ──────────────────────────────────────────────────────────────
 
-const W = 74   // total width incl. borders
+const W = 72
 
-// Banner box  ╔═╗
-const bTop = () => _.cyn + '╔' + '═'.repeat(W - 2) + '╗' + _.rst
-const bBot = () => _.cyn + '╚' + '═'.repeat(W - 2) + '╝' + _.rst
-const bRow = (txt = '') => _.cyn + '║' + _.rst + '  ' + pad(txt, W - 6) + '  ' + _.cyn + '║' + _.rst
+const bTop = () => _.blu + '╔' + '═'.repeat(W - 2) + '╗' + _.rst
+const bBot = () => _.blu + '╚' + '═'.repeat(W - 2) + '╝' + _.rst
+const bRow = (txt = '') => _.blu + '║' + _.rst + '  ' + pad(txt, W - 6) + '  ' + _.blu + '║' + _.rst
 
-// Section box  ┌─┐
 const sTop = (label) => {
-  const inner = W - 4 - vis(label).length
-  return _.blu + '┌─ ' + _.rst + _.bold + _.ylw + label + _.rst + ' ' + _.blu + '─'.repeat(inner) + '┐' + _.rst
+  const gap = W - 6 - vis(label).length
+  return _.lbl + '┌─ ' + _.rst + _.bold + _.ylw + label + _.rst + ' ' + _.lbl + '─'.repeat(gap) + '┐' + _.rst
 }
-const sBot = () => _.blu + '└' + '─'.repeat(W - 2) + '┘' + _.rst
-const sSep = () => _.blu + '├' + '─'.repeat(W - 2) + '┤' + _.rst
-const sEmp = () => _.blu + '│' + _.rst + ' '.repeat(W - 2) + _.blu + '│' + _.rst
+const sBot = () => _.lbl + '└' + '─'.repeat(W - 2) + '┘' + _.rst
+const sSep = () => _.lbl + '├' + '─'.repeat(W - 2) + '┤' + _.rst
+const sEmp = () => _.lbl + '│' + _.rst + ' '.repeat(W - 2) + _.lbl + '│' + _.rst
 const sRow = (key, val) =>
-  _.blu + '│' + _.rst + '  ' +
-  _.gry + pad(key, 16) + _.rst + '  ' +
-  pad(val, W - 24) +
-  _.blu + '│' + _.rst
+  _.lbl + '│' + _.rst + '  ' +
+  _.gry + pad(key, 15) + _.rst + '   ' +
+  pad(val, W - 23) +
+  _.lbl + '│' + _.rst
 
-// ─── Logo ─────────────────────────────────────────────────────────────────────
+// ─── ASCII Logo ───────────────────────────────────────────────────────────────
 
 const LOGO = [
-  _.cyn + '  ██████╗███████╗██╗   ██╗███████╗██╗  ██╗' + _.rst,
-  _.cyn + ' ██╔════╝██╔════╝██║   ██║██╔════╝╚██╗██╔╝' + _.rst,
-  _.cyn + ' ██║     █████╗  ██║   ██║█████╗   ╚███╔╝ ' + _.rst,
-  _.cyn + ' ██║     ██╔══╝  ╚██╗ ██╔╝██╔══╝   ██╔██╗ ' + _.rst,
-  _.cyn + ' ╚██████╗███████╗ ╚████╔╝ ███████╗██╔╝ ██╗' + _.rst,
-  _.cyn + '  ╚═════╝╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝' + _.rst,
-]
+  '  ██████╗███████╗██╗   ██╗███████╗██╗  ██╗',
+  ' ██╔════╝██╔════╝██║   ██║██╔════╝╚██╗██╔╝',
+  ' ██║     █████╗  ██║   ██║█████╗   ╚███╔╝ ',
+  ' ██║     ██╔══╝  ╚██╗ ██╔╝██╔══╝   ██╔██╗ ',
+  ' ╚██████╗███████╗ ╚████╔╝ ███████╗██╔╝ ██╗',
+  '  ╚═════╝╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝',
+].map(l => _.blu + l + _.rst)
 
-// ─── Utilities ────────────────────────────────────────────────────────────────
+// ─── Utils ────────────────────────────────────────────────────────────────────
 
 const toHex = b => Buffer.from(b).toString('hex')
-const abbr  = h => _.gry + h.slice(0, 8) + '…' + h.slice(-8) + _.rst
+const abbr  = h => _.dgry + h.slice(0, 8) + '…' + h.slice(-8) + _.rst
 
 function deriveAddress(pk) {
   const hash = keccak_256(pk)
@@ -79,38 +78,38 @@ function buildSignedBytes({ agentAddress, nonce, timestamp, action }) {
   let off = 0
   buf.set(PREFIX, off); off += PREFIX.length
   buf[off++] = 0x01
-  buf.set(addr, off);   off += 20
+  buf.set(addr, off); off += 20
   const u64 = v => {
     const hi = Number((v >> 32n) & 0xffffffffn)
     const lo = Number(v & 0xffffffffn)
-    buf[off]   = (hi>>>24)&0xff; buf[off+1] = (hi>>>16)&0xff
-    buf[off+2] = (hi>>>8)&0xff;  buf[off+3] = hi&0xff
-    buf[off+4] = (lo>>>24)&0xff; buf[off+5] = (lo>>>16)&0xff
-    buf[off+6] = (lo>>>8)&0xff;  buf[off+7] = lo&0xff
+    buf[off]  =(hi>>>24)&0xff; buf[off+1]=(hi>>>16)&0xff
+    buf[off+2]=(hi>>>8) &0xff; buf[off+3]=hi&0xff
+    buf[off+4]=(lo>>>24)&0xff; buf[off+5]=(lo>>>16)&0xff
+    buf[off+6]=(lo>>>8) &0xff; buf[off+7]=lo&0xff
     off += 8
   }
   u64(BigInt(nonce)); u64(BigInt(timestamp))
   const len = action.length
   buf[off++]=(len>>>24)&0xff; buf[off++]=(len>>>16)&0xff
-  buf[off++]=(len>>>8)&0xff;  buf[off++]=len&0xff
+  buf[off++]=(len>>>8) &0xff; buf[off++]=len&0xff
   buf.set(action, off)
   return buf
 }
 
-// ─── Run ──────────────────────────────────────────────────────────────────────
+// ─── Output ───────────────────────────────────────────────────────────────────
 
 console.log()
 console.log(bTop())
 console.log(bRow())
 for (const line of LOGO) console.log(bRow(line))
 console.log(bRow())
-console.log(bRow(pad(_.wht + _.bold + 'Post-Quantum Identity for Autonomous AI Agents' + _.rst, 0)))
-console.log(bRow(pad(_.gry + 'CRYSTALS-Dilithium  ·  Base L2  ·  NIST FIPS 204  ·  ML-DSA-65' + _.rst, 0)))
+console.log(bRow(_.bold + _.wht + 'Post-Quantum Identity for Autonomous AI Agents' + _.rst))
+console.log(bRow(_.dgry + 'CRYSTALS-Dilithium  ·  Base L2  ·  NIST FIPS 204  ·  ML-DSA-65' + _.rst))
 console.log(bRow())
 console.log(bBot())
 console.log()
 
-// ── 1. Key Generation ────────────────────────────────────────────────────────
+// ── 1. Key Generation ─────────────────────────────────────────────────────────
 
 console.log(sTop('[ 1 / 3 ]  KEY GENERATION'))
 console.log(sEmp())
@@ -121,25 +120,28 @@ const { publicKey, secretKey } = ml_dsa65.keygen(seed)
 const agentAddress = deriveAddress(publicKey)
 const t1 = performance.now()
 
-console.log(sRow('Scheme',        _.cyn + 'CRYSTALS-Dilithium' + _.rst + _.gry + ' (NIST FIPS 204 / ML-DSA-65)' + _.rst))
+console.log(sRow('Scheme',        _.blu + 'CRYSTALS-Dilithium' + _.rst + _.gry + '  ·  NIST FIPS 204 / ML-DSA-65' + _.rst))
 console.log(sRow('Security',      _.ylw + '162-bit post-quantum' + _.rst + _.gry + '  ·  Module LWE hardness' + _.rst))
-console.log(sRow('Entropy',       'OS CSPRNG  ·  SHAKE-256 conditioned'))
+console.log(sRow('Entropy',       _.gry + 'OS CSPRNG  ·  SHAKE-256 conditioned' + _.rst))
 console.log(sSep())
 console.log(sRow('Public key',    _.bold + _.wht + publicKey.length + ' bytes' + _.rst + '  ' + abbr(toHex(publicKey))))
 console.log(sRow('Secret key',    _.bold + _.wht + secretKey.length + ' bytes' + _.rst + '  ' + abbr(toHex(secretKey))))
-console.log(sRow('Agent address', _.bold + _.wht + agentAddress + _.rst))
+console.log(sRow('Address',       _.bold + _.wht + agentAddress + _.rst))
 console.log(sSep())
 console.log(sRow('Time',          _.grn + (t1 - t0).toFixed(2) + ' ms' + _.rst))
 console.log(sEmp())
 console.log(sBot())
 console.log()
 
-// ── 2. Signing ───────────────────────────────────────────────────────────────
+// ── 2. Signing ────────────────────────────────────────────────────────────────
 
 console.log(sTop('[ 2 / 3 ]  SIGNING'))
 console.log(sEmp())
 
-const action    = new TextEncoder().encode(JSON.stringify({ type: 'transfer', amount: '100', token: 'USDC', to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', network: 'base' }))
+const action    = new TextEncoder().encode(JSON.stringify({
+  type: 'transfer', amount: '100', token: 'USDC',
+  to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', network: 'base',
+}))
 const nonce     = 1
 const timestamp = Date.now()
 const msgBytes  = buildSignedBytes({ agentAddress, nonce, timestamp, action })
@@ -148,21 +150,19 @@ const t2 = performance.now()
 const signature = ml_dsa65.sign(secretKey, msgBytes)
 const t3 = performance.now()
 
-const actionPreview = new TextDecoder().decode(action).slice(0, 42) + '…'
-
-console.log(sRow('Action',     _.gry + actionPreview + _.rst))
-console.log(sRow('Nonce',      _.bold + _.wht + '1' + _.rst))
-console.log(sRow('Timestamp',  new Date(timestamp).toISOString()))
-console.log(sRow('Domain',     _.cyn + '"CEVEX-MSG-v1"' + _.rst + _.gry + '  ·  bound to every signature' + _.rst))
+console.log(sRow('Action',    _.gry + '{"type":"transfer","amount":"100","token":"USDC",…}' + _.rst))
+console.log(sRow('Nonce',     _.bold + _.wht + '1' + _.rst))
+console.log(sRow('Timestamp', _.gry + new Date(timestamp).toISOString() + _.rst))
+console.log(sRow('Domain',    _.blu + '"CEVEX-MSG-v1"' + _.rst + _.gry + '  ·  replay protection prefix' + _.rst))
 console.log(sSep())
-console.log(sRow('Signature',  _.bold + _.wht + signature.length + ' bytes' + _.rst + '  ' + abbr(toHex(signature))))
+console.log(sRow('Signature', _.bold + _.wht + signature.length + ' bytes' + _.rst + '  ' + abbr(toHex(signature))))
 console.log(sSep())
-console.log(sRow('Time',       _.grn + (t3 - t2).toFixed(2) + ' ms' + _.rst))
+console.log(sRow('Time',      _.grn + (t3 - t2).toFixed(2) + ' ms' + _.rst))
 console.log(sEmp())
 console.log(sBot())
 console.log()
 
-// ── 3. Verification ──────────────────────────────────────────────────────────
+// ── 3. Verification ───────────────────────────────────────────────────────────
 
 console.log(sTop('[ 3 / 3 ]  VERIFICATION'))
 console.log(sEmp())
@@ -171,33 +171,33 @@ const t4    = performance.now()
 const valid = ml_dsa65.verify(publicKey, msgBytes, signature)
 const t5    = performance.now()
 
-const tampered   = new Uint8Array(signature); tampered[42] ^= 0x01
-const tamperPass = ml_dsa65.verify(publicKey, msgBytes, tampered)
+const tampered = new Uint8Array(signature); tampered[42] ^= 0x01
+const tamperOk = ml_dsa65.verify(publicKey, msgBytes, tampered)
 
-console.log(sRow('Input',        'public key  ·  signed bytes  ·  signature'))
-console.log(sRow('Trusted party',_.bold + _.ylw + 'none' + _.rst + _.gry + '  —  pure lattice math, no CA' + _.rst))
+console.log(sRow('Input',        _.gry + 'public key  ·  signed bytes  ·  signature' + _.rst))
+console.log(sRow('Trusted party',_.bold + _.ylw + 'none' + _.rst + _.gry + '  —  pure lattice math, no CA required' + _.rst))
 console.log(sSep())
 console.log(sRow('Result',       valid ? _.bold + _.grn + '✓  VALID' + _.rst : _.bold + _.red + '✗  INVALID' + _.rst))
-console.log(sRow('Tamper test',  _.gry + 'flip 1 bit  →  ' + _.rst + (!tamperPass ? _.bold + _.grn + '✗  REJECTED' + _.rst : _.bold + _.red + '✗  PASSED (bug!)' + _.rst) + _.gry + '  (as expected)' + _.rst))
+console.log(sRow('Tamper test',  _.gry + 'flip 1 bit  →  ' + _.rst + (!tamperOk ? _.bold + _.grn + '✗  REJECTED' + _.rst : _.bold + _.red + 'PASSED (BUG)' + _.rst) + _.gry + '  (as expected)' + _.rst))
 console.log(sSep())
 console.log(sRow('Time',         _.grn + (t5 - t4).toFixed(2) + ' ms' + _.rst))
 console.log(sEmp())
 console.log(sBot())
 console.log()
 
-// ── Summary ──────────────────────────────────────────────────────────────────
+// ── Summary ───────────────────────────────────────────────────────────────────
 
 const total = (t1 - t0) + (t3 - t2) + (t5 - t4)
 
 console.log(sTop('SUMMARY'))
 console.log(sEmp())
-console.log(sRow('Total time',    _.grn + total.toFixed(2) + ' ms' + _.rst))
-console.log(sRow('Quantum-safe',  _.bold + _.grn + 'yes' + _.rst + _.gry + "  ·  Shor's algorithm cannot break this" + _.rst))
-console.log(sRow('Replay-proof',  _.bold + _.grn + 'yes' + _.rst + _.gry + '  ·  nonce + timestamp + domain prefix'  + _.rst))
-console.log(sRow('Trustless',     _.bold + _.grn + 'yes' + _.rst + _.gry + '  ·  any party can verify with the public key' + _.rst))
-console.log(sRow('On-chain',      _.gry + 'agentAddress → CevexRegistry.sol on Base' + _.rst))
+console.log(sRow('Total time',   _.grn + total.toFixed(2) + ' ms  ' + _.rst + _.dgry + '(keygen + sign + verify)' + _.rst))
+console.log(sRow('Quantum-safe', _.bold + _.grn + 'yes' + _.rst + _.dgry + "  ·  Shor's algorithm cannot break this" + _.rst))
+console.log(sRow('Replay-proof', _.bold + _.grn + 'yes' + _.rst + _.dgry + '  ·  nonce + timestamp + domain prefix' + _.rst))
+console.log(sRow('Trustless',    _.bold + _.grn + 'yes' + _.rst + _.dgry + '  ·  any party can verify with the public key' + _.rst))
+console.log(sRow('On-chain',     _.dgry + 'agentAddress → CevexRegistry.sol on Base' + _.rst))
 console.log(sEmp())
-console.log(sRow('',              _.gry + 'github.com/cevexlabs/Cevex' + _.rst))
+console.log(sRow('',             _.dgry + 'github.com/cevexlabs/Cevex' + _.rst))
 console.log(sEmp())
 console.log(sBot())
 console.log()
