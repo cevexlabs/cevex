@@ -1,4 +1,4 @@
-# Research Horizon
+# Phase 4: Research Horizon
 
 {% hint style="info" %}
 **Research.** These items extend the protocol beyond the immediate release path and depend on cryptographic maturity, implementation safety, and formal review.
@@ -111,6 +111,6 @@ $$|\{i : \mathbf{s}_1^{(i)} \text{ participates}\}| \geq t$$
 
 ## Next
 
-* [Foundation](foundation.md)
-* [Developer Access](developer-access.md)
-* [Ecosystem Expansion](ecosystem-expansion.md)
+* [Phase 1: Foundation](foundation.md)
+* [Phase 2: Developer Access](developer-access.md)
+* [Phase 3: Ecosystem Expansion](ecosystem-expansion.md)

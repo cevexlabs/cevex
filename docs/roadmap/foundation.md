@@ -1,4 +1,4 @@
-# Foundation
+# Phase 1: Foundation
 
 {% hint style="success" %}
 **Implemented foundation.** The Dilithium identity path, deterministic addressing model, and Base registry source are in place.
@@ -112,6 +112,6 @@ The registry is append-only. A registered identity can rotate keys or become per
 
 ## Next
 
-* [Developer Access](developer-access.md)
-* [Ecosystem Expansion](ecosystem-expansion.md)
-* [Research Horizon](research-horizon.md)
+* [Phase 2: Developer Access](developer-access.md)
+* [Phase 3: Ecosystem Expansion](ecosystem-expansion.md)
+* [Phase 4: Research Horizon](research-horizon.md)

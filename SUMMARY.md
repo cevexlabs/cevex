@@ -28,7 +28,7 @@
 
 ## Roadmap
 
-* [Foundation](docs/roadmap/foundation.md)
-* [Developer Access](docs/roadmap/developer-access.md)
-* [Ecosystem Expansion](docs/roadmap/ecosystem-expansion.md)
-* [Research Horizon](docs/roadmap/research-horizon.md)
+* [Phase 1: Foundation](docs/roadmap/foundation.md)
+* [Phase 2: Developer Access](docs/roadmap/developer-access.md)
+* [Phase 3: Ecosystem Expansion](docs/roadmap/ecosystem-expansion.md)
+* [Phase 4: Research Horizon](docs/roadmap/research-horizon.md)

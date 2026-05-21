@@ -1,4 +1,4 @@
-# Developer Access
+# Phase 2: Developer Access
 
 {% hint style="info" %}
 **Active delivery.** The TypeScript packages, CLI surface, local validation demo, and GitBook reference are now available in the repository.
@@ -127,6 +127,6 @@ $$\text{Verify}_{pk}\!\left(\text{Encode}_{\text{CEVEX-MSG-v1}}(m),\sigma\right)
 
 ## Next
 
-* [Foundation](foundation.md)
-* [Ecosystem Expansion](ecosystem-expansion.md)
-* [Research Horizon](research-horizon.md)
+* [Phase 1: Foundation](foundation.md)
+* [Phase 3: Ecosystem Expansion](ecosystem-expansion.md)
+* [Phase 4: Research Horizon](research-horizon.md)

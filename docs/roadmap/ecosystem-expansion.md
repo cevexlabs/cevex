@@ -1,4 +1,4 @@
-# Ecosystem Expansion
+# Phase 3: Ecosystem Expansion
 
 {% hint style="warning" %}
 **Upcoming.** Ecosystem work begins after the developer access release hardens the SDK, CLI, and registry client.
@@ -111,6 +111,6 @@ Mirrors resolve agent identities outside Base using verifiable state proofs. The
 
 ## Next
 
-* [Foundation](foundation.md)
-* [Developer Access](developer-access.md)
-* [Research Horizon](research-horizon.md)
+* [Phase 1: Foundation](foundation.md)
+* [Phase 2: Developer Access](developer-access.md)
+* [Phase 4: Research Horizon](research-horizon.md)
