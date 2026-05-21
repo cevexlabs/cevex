@@ -12,21 +12,21 @@ This phase turns the core identity system into tools people can actually use. De
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#003399', 'primaryTextColor': '#eff6ff', 'primaryBorderColor': '#1a7fff', 'lineColor': '#3d8bff', 'secondaryColor': '#001650', 'tertiaryColor': '#000d20', 'clusterBkg': '#001650', 'titleColor': '#eff6ff', 'edgeLabelBackground': '#001650'}}}%%
-graph LR
-    subgraph Packages["TypeScript Packages"]
-        CORE["@cevex/core\ncore crypto"]
-        AGENT["@cevex/agent\nprovision and sign"]
-        VERIFY["@cevex/verify\nsingle and batch verify"]
-        REG["@cevex/registry\nBase client"]
+flowchart TB
+    subgraph Core["Core Layer"]
+        CORE["@cevex/core\nsigning and keys"]
+        REG["@cevex/registry\nregistry client"]
     end
 
-    subgraph Tools["Tools"]
-        CLI["@cevex/cli\nterminal workflow"]
-        DEMO["examples\nlocal validation"]
+    subgraph Workflow["Workflow Layer"]
+        AGENT["@cevex/agent\nset up and sign"]
+        VERIFY["@cevex/verify\ncheck messages"]
     end
 
-    subgraph Python["Python"]
-        PY["cevex\nPython parity"]
+    subgraph Output["Developer Outputs"]
+        CLI["@cevex/cli\nterminal commands"]
+        PY["cevex\nPython SDK"]
+        DEMO["examples\nlocal demo"]
     end
 
     CORE --> AGENT
@@ -35,9 +35,9 @@ graph LR
     REG --> VERIFY
     AGENT --> CLI
     VERIFY --> CLI
-    CORE --> DEMO
     AGENT --> PY
     VERIFY --> PY
+    CLI --> DEMO
 
     style CORE fill:#003399,color:#eff6ff,stroke:#1a7fff
     style AGENT fill:#003399,color:#eff6ff,stroke:#1a7fff
@@ -46,6 +46,9 @@ graph LR
     style CLI fill:#001650,color:#7dd3fc,stroke:#3d8bff
     style DEMO fill:#001650,color:#7dd3fc,stroke:#3d8bff
     style PY fill:#001650,color:#7dd3fc,stroke:#3d8bff
+    style Core fill:#001650,color:#eff6ff,stroke:#1a7fff
+    style Workflow fill:#001650,color:#eff6ff,stroke:#1a7fff
+    style Output fill:#001650,color:#eff6ff,stroke:#1a7fff
 ```
 
 ---
