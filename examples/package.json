@@ -8,6 +8,8 @@
     "keygen": "node run.mjs keygen",
     "sign": "node run.mjs sign",
     "verify": "node run.mjs verify",
+    "scenario": "node run.mjs test",
+    "test": "node run.mjs test --json",
     "help": "node run.mjs help"
   },
   "dependencies": {

@@ -227,12 +227,67 @@ function showBanner() {
 const toHex = bytes => Buffer.from(bytes).toString('hex')
 const digestHex = bytes => toHex(shake256(bytes, { dkLen: 32 }))
 const abbr = (hex, left = 10, right = 10) => `${hex.slice(0, left)}...${hex.slice(-right)}`
+const abbrAddress = address => `${address.slice(0, 8)}...${address.slice(-6)}`
 const ms = value => `${value.toFixed(2)} ms`
+const encoder = new TextEncoder()
+
+const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+const RECIPIENT = '0x6fB3E0A217407EFFf7Ca062D46c26E5d60a14d69'
+const ATTACKER = '0x000000000000000000000000000000000000dEaD'
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) {
+    return '[' + value.map(item => canonicalJson(item)).join(',') + ']'
+  }
+
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().map(key =>
+      JSON.stringify(key) + ':' + canonicalJson(value[key])
+    ).join(',') + '}'
+  }
+
+  return JSON.stringify(value)
+}
+
+function clonePayload(payload) {
+  return JSON.parse(JSON.stringify(payload))
+}
+
+function encodeAction(payload) {
+  return encoder.encode(canonicalJson(payload))
+}
+
+function makeTransferScenario(timestamp) {
+  return {
+    request: {
+      id: `pay-${timestamp.toString(36)}`,
+      source: 'ops-console',
+    },
+    agent: {
+      id: 'treasury-agent-01',
+      role: 'payment-approver',
+    },
+    action: {
+      type: 'erc20.transfer',
+      network: 'base',
+      chainId: 8453,
+      token: 'USDC',
+      tokenAddress: BASE_USDC,
+      amount: '1250.00',
+      recipient: RECIPIENT,
+    },
+    controls: {
+      policy: 'allowlist-transfer-v1',
+      maxAmount: '5000.00',
+      expiresAt: new Date(timestamp + 5 * 60_000).toISOString(),
+    },
+  }
+}
 
 function deriveAddress(publicKey) {
   const hash = keccak_256(publicKey)
   const raw = toHex(hash.slice(12)).toLowerCase()
-  const checksumHash = toHex(keccak_256(new TextEncoder().encode(raw)))
+  const checksumHash = toHex(keccak_256(encoder.encode(raw)))
 
   let address = '0x'
   for (let i = 0; i < raw.length; i += 1) {
@@ -308,16 +363,10 @@ function runKeygen() {
 }
 
 function runSign(keygen) {
-  const payload = {
-    type: 'transfer',
-    amount: '100',
-    token: 'USDC',
-    to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-    network: 'base',
-  }
-  const action = new TextEncoder().encode(JSON.stringify(payload))
-  const nonce = 1
   const timestamp = Date.now()
+  const payload = makeTransferScenario(timestamp)
+  const action = encodeAction(payload)
+  const nonce = 17
   const signedBytes = buildSignedBytes({
     agentAddress: keygen.agentAddress,
     nonce,
@@ -331,13 +380,19 @@ function runSign(keygen) {
   const signatureHash = digestHex(signature)
   const elapsed = performance.now() - started
 
-  section('02', 'Message Signing', 'Bind a structured action to the CEVEX-MSG-v1 domain', [
+  section('02', 'Action Signing', 'Treasury agent signs a policy-bound Base action', [
     { group: 'Action' },
-    { field: 'Payload', value: 'transfer 100 USDC on Base', note: 'JSON action' },
+    { field: 'Request', value: payload.request.id, note: 'ops console' },
+    { field: 'Agent', value: payload.agent.id, note: payload.agent.role },
+    { field: 'Action', value: 'transfer USDC on Base', note: payload.action.type },
+    { field: 'Amount', value: `${payload.action.amount} ${payload.action.token}`, note: 'under policy cap' },
+    { field: 'Recipient', value: abbrAddress(payload.action.recipient), note: 'allowlisted' },
+    { field: 'Policy', value: payload.controls.policy, note: `max ${payload.controls.maxAmount}` },
     { field: 'Nonce', value: String(nonce), note: 'replay guard' },
-    { field: 'Timestamp', value: new Date(timestamp).toISOString(), note: 'UTC ms' },
+    { field: 'Expires', value: payload.controls.expiresAt, note: '5 minute window' },
     { field: 'Domain', value: 'CEVEX-MSG-v1', note: 'protocol binding', valueStyle: theme.cyan },
     { group: 'Artifacts' },
+    { field: 'Action bytes', value: `${action.length} bytes`, note: 'canonical JSON' },
     { field: 'Signed bytes', value: `${signedBytes.length} bytes`, note: `hash ${abbr(signedBytesHash, 8, 8)}` },
     { field: 'Signature', value: `${signature.length} bytes`, note: `hash ${abbr(signatureHash, 8, 8)}` },
     { group: 'Timing' },
@@ -350,6 +405,7 @@ function runSign(keygen) {
     signedBytes,
     signedBytesHash,
     action,
+    payload,
     nonce,
     timestamp,
     ms: elapsed,
@@ -361,50 +417,92 @@ function runVerify(keygen, signing) {
   const valid = ml_dsa65.verify(keygen.publicKey, signing.signedBytes, signing.signature)
   const elapsed = performance.now() - started
 
-  const tampered = new Uint8Array(signing.signature)
-  tampered[42] ^= 0x01
-  const signatureTamperAccepted = ml_dsa65.verify(keygen.publicKey, signing.signedBytes, tampered)
+  const amountTamperPayload = clonePayload(signing.payload)
+  amountTamperPayload.action.amount = '125000.00'
+  const amountTamperBytes = buildSignedBytes({
+    agentAddress: keygen.agentAddress,
+    nonce: signing.nonce,
+    timestamp: signing.timestamp,
+    action: encodeAction(amountTamperPayload),
+  })
+  const amountTamperAccepted = ml_dsa65.verify(
+    keygen.publicKey,
+    amountTamperBytes,
+    signing.signature,
+  )
 
-  const tamperedMessage = new Uint8Array(signing.signedBytes)
-  tamperedMessage[tamperedMessage.length - 1] ^= 0x01
-  const messageTamperAccepted = ml_dsa65.verify(keygen.publicKey, tamperedMessage, signing.signature)
+  const recipientTamperPayload = clonePayload(signing.payload)
+  recipientTamperPayload.action.recipient = ATTACKER
+  const recipientTamperBytes = buildSignedBytes({
+    agentAddress: keygen.agentAddress,
+    nonce: signing.nonce,
+    timestamp: signing.timestamp,
+    action: encodeAction(recipientTamperPayload),
+  })
+  const recipientTamperAccepted = ml_dsa65.verify(
+    keygen.publicKey,
+    recipientTamperBytes,
+    signing.signature,
+  )
 
-  section('03', 'Verification', 'Validate the signature and reject modified inputs', [
+  const signatureTamper = new Uint8Array(signing.signature)
+  signatureTamper[42] ^= 0x01
+  const signatureTamperAccepted = ml_dsa65.verify(
+    keygen.publicKey,
+    signing.signedBytes,
+    signatureTamper,
+  )
+
+  section('03', 'Verification Test', 'Check the signed action and reject realistic tampering', [
     { group: 'Inputs' },
-    { field: 'Input', value: 'public key + signed bytes + signature', note: 'no CA' },
-    { field: 'Lookup', value: 'in-memory public key', note: 'registry-free demo' },
-    { field: 'Trust anchor', value: 'none', note: 'local lattice math', valueStyle: theme.cyan },
+    { field: 'Scenario', value: 'Base USDC transfer approval', note: 'test case' },
+    { field: 'Lookup', value: 'in-memory registry record', note: 'offline mirror' },
+    { field: 'Verifier', value: 'public key + signed bytes + signature', note: 'no CA' },
+    { field: 'Trust anchor', value: 'none', note: 'local verification', valueStyle: theme.cyan },
     { group: 'Checks' },
     {
-      field: 'Signature',
-      value: valid ? 'VALID' : 'INVALID',
-      note: 'ML-DSA verify',
+      field: 'Original',
+      value: valid ? 'ACCEPTED' : 'REJECTED',
+      note: 'signature matches',
       valueStyle: valid ? theme.success : theme.danger,
     },
     {
-      field: 'Sig tamper',
+      field: 'Amount edit',
+      value: amountTamperAccepted ? 'FAILED' : 'REJECTED',
+      note: 'changed to 125000',
+      valueStyle: amountTamperAccepted ? theme.danger : theme.success,
+    },
+    {
+      field: 'Dest edit',
+      value: recipientTamperAccepted ? 'FAILED' : 'REJECTED',
+      note: 'changed recipient',
+      valueStyle: recipientTamperAccepted ? theme.danger : theme.success,
+    },
+    {
+      field: 'Sig byte',
       value: signatureTamperAccepted ? 'FAILED' : 'REJECTED',
       note: 'single bit flip',
       valueStyle: signatureTamperAccepted ? theme.danger : theme.success,
-    },
-    {
-      field: 'Msg tamper',
-      value: messageTamperAccepted ? 'FAILED' : 'REJECTED',
-      note: 'payload bit flip',
-      valueStyle: messageTamperAccepted ? theme.danger : theme.success,
     },
     { group: 'Timing' },
     { field: 'Elapsed', value: ms(elapsed), note: 'verification time', valueStyle: theme.success },
   ])
 
-  return { valid, signatureTamperAccepted, messageTamperAccepted, ms: elapsed }
+  return {
+    valid,
+    amountTamperAccepted,
+    recipientTamperAccepted,
+    signatureTamperAccepted,
+    ms: elapsed,
+  }
 }
 
 function showSummary(keygen, signing, verification) {
   const total = keygen.ms + signing.ms + verification.ms
   const passed = verification.valid &&
     !verification.signatureTamperAccepted &&
-    !verification.messageTamperAccepted
+    !verification.amountTamperAccepted &&
+    !verification.recipientTamperAccepted
 
   section('04', 'Run Summary', 'Protocol validation result and execution profile', [
     { group: 'Result' },
@@ -416,6 +514,8 @@ function showSummary(keygen, signing, verification) {
     },
     { field: 'Total time', value: ms(total), note: 'keygen + sign + verify', valueStyle: theme.success },
     { group: 'Context' },
+    { field: 'Test case', value: 'Base USDC transfer approval', note: signing.payload.request.id },
+    { field: 'Policy', value: signing.payload.controls.policy, note: `max ${signing.payload.controls.maxAmount}` },
     { field: 'PQC scheme', value: 'CRYSTALS-Dilithium / ML-DSA-65', note: 'default path' },
     { field: 'Identity', value: keygen.agentAddress, note: 'registry-ready' },
     { field: 'Artifacts', value: 'none written to disk', note: 'demo is memory-only' },
@@ -447,6 +547,7 @@ function showCliReference() {
   console.log(commandRow('node run.mjs keygen', 'run key generation only'))
   console.log(commandRow('node run.mjs sign', 'run key generation and signing'))
   console.log(commandRow('node run.mjs verify', 'run key generation, signing, and verification'))
+  console.log(commandRow('node run.mjs test', 'run realistic transfer approval test'))
   console.log(commandRow('node run.mjs help', 'show this screen'))
   console.log(commandRow('--json', 'emit machine-readable validation result'))
   console.log(commandRow('--color / --no-color', 'force or disable branded terminal colors'))
@@ -474,6 +575,7 @@ function emitHelpJson() {
       keygen: 'run key generation only',
       sign: 'run key generation and signing',
       verify: 'run key generation, signing, and verification',
+      test: 'run realistic transfer approval test',
       help: 'show usage information',
     },
     options: {
@@ -488,7 +590,8 @@ function emitJson({ keygen, signing, verification, mode }) {
   const passed = verification
     ? verification.valid &&
       !verification.signatureTamperAccepted &&
-      !verification.messageTamperAccepted
+      !verification.amountTamperAccepted &&
+      !verification.recipientTamperAccepted
     : true
 
   const payload = {
@@ -499,13 +602,27 @@ function emitJson({ keygen, signing, verification, mode }) {
     network: 'offline',
     agentAddress: keygen.agentAddress,
     publicKeyHash: keygen.publicKeyHash,
+    signedAction: signing
+      ? {
+          requestId: signing.payload.request.id,
+          agentId: signing.payload.agent.id,
+          type: signing.payload.action.type,
+          network: signing.payload.action.network,
+          token: signing.payload.action.token,
+          amount: signing.payload.action.amount,
+          recipient: signing.payload.action.recipient,
+          policy: signing.payload.controls.policy,
+          expiresAt: signing.payload.controls.expiresAt,
+        }
+      : undefined,
     messageHash: signing?.signedBytesHash,
     signatureHash: signing?.signatureHash,
     checks: verification
       ? {
           signatureValid: verification.valid,
+          amountTamperRejected: !verification.amountTamperAccepted,
+          recipientTamperRejected: !verification.recipientTamperAccepted,
           signatureTamperRejected: !verification.signatureTamperAccepted,
-          messageTamperRejected: !verification.messageTamperAccepted,
         }
       : undefined,
     timingsMs: {
@@ -525,7 +642,7 @@ if (cmd === 'help') {
   process.exit(0)
 }
 
-if (cmd && !['keygen', 'sign', 'verify'].includes(cmd)) {
+if (cmd && !['keygen', 'sign', 'verify', 'test'].includes(cmd)) {
   console.error()
   console.error(theme.danger(`Unknown command: ${cmd}`))
   console.error(`Run ${theme.primary('node run.mjs help')} for available commands.`)
@@ -550,9 +667,16 @@ if (cmd === 'sign') {
 const verification = runVerify(keygen, signing)
 const passed = verification.valid &&
   !verification.signatureTamperAccepted &&
-  !verification.messageTamperAccepted
+  !verification.amountTamperAccepted &&
+  !verification.recipientTamperAccepted
 if (cmd === 'verify') {
   if (jsonMode) emitJson({ keygen, signing, verification, mode: 'verify' })
+  process.exit(passed ? 0 : 1)
+}
+
+if (cmd === 'test') {
+  showSummary(keygen, signing, verification)
+  if (jsonMode) emitJson({ keygen, signing, verification, mode: 'test' })
   process.exit(passed ? 0 : 1)
 }
 
