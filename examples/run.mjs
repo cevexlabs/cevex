@@ -32,11 +32,11 @@ const center = (s, w) => ' '.repeat(Math.max(0, Math.floor((w - vlen(s)) / 2))) 
 //
 //  Data rows: │  key(K_W)   val(V_W)  │  annotation(A_W)  │
 //
-//  1+2+K_W+3+V_W+2+1+2+A_W+2+1 = 14+K_W+V_W+A_W = 14+12+52+38 = 116 = W ✓
+//  1+2+K_W+3+V_W+2+1+2+A_W+2+1 = 14+K_W+V_W+A_W = 14+13+51+38 = 116 = W ✓
 
 const W   = 116
-const K_W = 12
-const V_W = 52
+const K_W = 13   // 'Trusted party' = 13 chars — longest key
+const V_W = 51
 const A_W = 38
 const C_W = W - 6  // = 110
 
@@ -60,16 +60,6 @@ const sBot  = () => _.lbl + '└' + '─'.repeat(L_DASHES) + '┴' + '─'.repea
 const sSep  = () => _.lbl + '├' + '─'.repeat(L_DASHES) + '┼' + '─'.repeat(R_DASHES) + '┤' + _.rst
 const sEmp  = () => _.lbl + '│' + ' '.repeat(L_DASHES) + '│' + ' '.repeat(R_DASHES) + '│' + _.rst
 
-// Separator with a centred label stamped into the left segment
-const sSepLbl = (label) => {
-  const inner   = ' ' + _.bold + _.dgry + label + _.rst + ' '
-  const innerW  = 2 + vlen(label)
-  const before  = Math.floor((L_DASHES - innerW) / 2)
-  const after   = L_DASHES - innerW - before
-  return _.lbl + '├' + '─'.repeat(before) + _.rst + inner +
-         _.lbl + '─'.repeat(after) + '┼' + '─'.repeat(R_DASHES) + '┤' + _.rst
-}
-
 // Three-column data row
 const sRow = (key, val, annot = '') => {
   const k     = rpad(_.gry + key + _.rst, K_W)
@@ -81,15 +71,14 @@ const sRow = (key, val, annot = '') => {
 }
 
 // Full-width single-column row (no divider) — used for command listings
-// Layout: │  label(L_W)   value(R_W)  │   where L_W+R_W = W-10
+// Layout: │  label(L_W)   value(R_W)  │   where 1+2+L_W+3+R_W+2+1 = W
 const L_W = 22
-const R_W = W - 10 - L_W   // = 84
+const R_W = W - 9 - L_W   // = 85
 const wRow = (label, value, hilite = false) => {
   const l = rpad((hilite ? _.ylw : _.gry) + label + _.rst, L_W)
   const v = rpad(trunc(hilite ? _.cmd + value + _.rst : _.dgry + value + _.rst, R_W), R_W)
   return _.lbl + '│' + _.rst + '  ' + l + '   ' + v + '  ' + _.lbl + '│' + _.rst
 }
-// sEmp equivalent for full-width rows (no divider)
 const wEmp = () => _.lbl + '│' + ' '.repeat(W - 2) + '│' + _.rst
 const wSep = () => _.lbl + '├' + '─'.repeat(W - 2) + '┤' + _.rst
 const wBot = () => _.lbl + '└' + '─'.repeat(W - 2) + '┘' + _.rst
@@ -225,7 +214,7 @@ function runSign(kg) {
   console.log(sSep())
   console.log(sRow('Signature',
     _.bold + _.wht + signature.length + ' bytes' + _.rst + '  ' + abbr(toHex(signature)),
-    '52× larger than ECDSA · quantum-safe'))
+    '52x larger than ECDSA · quantum-safe'))
   console.log(sSep())
   console.log(sRow('Time',
     _.grn + (t3 - t2).toFixed(2) + ' ms' + _.rst,
@@ -248,21 +237,21 @@ function runVerify(kg, sg) {
     _.dgry + 'public key  ·  signed bytes  ·  signature' + _.rst,
     'Three inputs · no external lookup'))
   console.log(sRow('Trusted party',
-    _.bold + _.ylw + 'none' + _.rst + _.dgry + '  —  pure lattice math, no CA' + _.rst,
+    _.bold + _.ylw + 'none' + _.rst + _.dgry + '  ·  pure lattice math, no CA' + _.rst,
     'Any node can verify independently'))
   console.log(sSep())
   console.log(sRow('Result',
     valid    ? _.bold + _.grn + '✓  VALID'        + _.rst : _.bold + _.red + '✗  INVALID'      + _.rst,
-    valid    ? 'Verified by pure lattice math alone'       : 'Verification failed — investigate'))
+    valid    ? 'Verified by pure lattice math alone'       : 'Verification failed · investigate'))
   console.log(sRow('Tamper test',
-    _.dgry + 'flip 1 bit  →  ' + _.rst +
+    _.dgry + 'flip 1 bit  ·  ' + _.rst +
       (!tamperOk ? _.bold + _.grn + '✗  REJECTED' + _.rst : _.bold + _.red + 'PASSED (BUG)' + _.rst) +
       _.dgry + '  (expected)' + _.rst,
     !tamperOk ? '1-bit flip triggers full rejection' : 'WARNING: tamper was not detected'))
   console.log(sSep())
   console.log(sRow('Time',
     _.grn + (t5 - t4).toFixed(2) + ' ms' + _.rst,
-    'ML-DSA verify ~3× faster than sign'))
+    'ML-DSA verify ~3x faster than sign'))
   console.log(sEmp())
   console.log(sBot())
   console.log()
@@ -322,13 +311,13 @@ function showSummary(kg, sg, vr) {
   console.log(wRow(_.bold + _.ylw + 'DEMO COMMANDS' + _.rst, ''))
   console.log(wEmp())
   console.log(wRow('node run.mjs',
-    'Full demo  —  keygen → sign → verify → summary   ← you are here'))
+    'Full demo  ·  keygen → sign → verify → summary   ← you are here'))
   console.log(wRow('node run.mjs keygen',
-    'Step 1 only  —  generate a post-quantum keypair'))
+    'Step 1 only  ·  generate a post-quantum keypair'))
   console.log(wRow('node run.mjs sign',
-    'Steps 1–2  —  keygen + sign a transfer payload'))
+    'Steps 1-2  ·  keygen + sign a transfer payload'))
   console.log(wRow('node run.mjs verify',
-    'Steps 1–3  —  keygen + sign + verify + tamper test'))
+    'Steps 1-3  ·  keygen + sign + verify + tamper test'))
   console.log(wRow('node run.mjs help',
     'Show the help screen'))
   console.log(wEmp())
@@ -350,7 +339,7 @@ function showHelp() {
   console.log(bBot())
   console.log()
 
-  console.log(sTop('HELP  —  node run.mjs [command]'))
+  console.log(sTop('HELP  ·  node run.mjs [command]'))
   console.log(wEmp())
   console.log(wRow(_.bold + _.wht + 'ABOUT' + _.rst, ''))
   console.log(wEmp())
@@ -359,28 +348,27 @@ function showHelp() {
   console.log(wRow('',
     'Generates a real ML-DSA-65 keypair, signs a transfer payload,'))
   console.log(wRow('',
-    'and verifies the signature — all on your machine, no network needed.'))
+    'and verifies the signature · all on your machine, no network needed.'))
   console.log(wEmp())
   console.log(wSep())
   console.log(wEmp())
   console.log(wRow(_.bold + _.wht + 'COMMANDS' + _.rst, ''))
   console.log(wEmp())
-  console.log(wRow('(no argument)',  'Full demo — all three steps + summary + CLI reference', true))
-  console.log(wRow('keygen',         'Key generation only — derive a PQ keypair and address',  true))
-  console.log(wRow('sign',           'Keygen + signing — create and display a real signature',  true))
-  console.log(wRow('verify',         'Keygen + sign + verify — includes tamper-detection test', true))
+  console.log(wRow('(no argument)',  'Full demo · all three steps + summary + CLI reference', true))
+  console.log(wRow('keygen',         'Key generation only · derive a PQ keypair and address',  true))
+  console.log(wRow('sign',           'Keygen + signing · create and display a real signature',  true))
+  console.log(wRow('verify',         'Keygen + sign + verify · includes tamper-detection test', true))
   console.log(wRow('help',           'Show this screen',                                        true))
   console.log(wEmp())
   console.log(wSep())
   console.log(wEmp())
   console.log(wRow(_.bold + _.wht + 'CRYPTO DETAILS' + _.rst, ''))
   console.log(wEmp())
-  console.log(wRow('Scheme',    'CRYSTALS-Dilithium  (ML-DSA-65)  —  NIST FIPS 204'))
-  console.log(wRow('Security',  '162-bit post-quantum · Module LWE lattice hardness assumption'))
-  console.log(wRow('Key sizes', 'Public key 1952 B  ·  Secret key 4032 B  ·  Signature 3309 B'))
-  console.log(wRow('Wire format',
-    'CEVEX-MSG-v1 | version | address(20) | nonce(8) | ts(8) | action'))
-  console.log(wRow('Address',   'keccak_256(pubkey).slice(12)  →  EIP-55 checksum  →  0x…'))
+  console.log(wRow('Scheme',       'CRYSTALS-Dilithium  (ML-DSA-65)  ·  NIST FIPS 204'))
+  console.log(wRow('Security',     '162-bit post-quantum · Module LWE lattice hardness assumption'))
+  console.log(wRow('Key sizes',    'Public key 1952 B  ·  Secret key 4032 B  ·  Signature 3309 B'))
+  console.log(wRow('Wire format',  'CEVEX-MSG-v1 | version | address(20) | nonce(8) | ts(8) | action'))
+  console.log(wRow('Address',      'keccak_256(pubkey).slice(12)  ·  EIP-55 checksum  ·  0x...'))
   console.log(wEmp())
   console.log(wSep())
   console.log(wEmp())

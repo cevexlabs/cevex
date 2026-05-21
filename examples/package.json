@@ -1,0 +1,17 @@
+{
+  "name": "@cevex/examples",
+  "version": "0.1.0",
+  "description": "CEVEX protocol live terminal demo — keygen, sign, verify",
+  "type": "module",
+  "scripts": {
+    "start": "node run.mjs",
+    "keygen": "node run.mjs keygen",
+    "sign": "node run.mjs sign",
+    "verify": "node run.mjs verify",
+    "help": "node run.mjs help"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.4.0",
+    "@noble/post-quantum": "^0.2.0"
+  }
+}
