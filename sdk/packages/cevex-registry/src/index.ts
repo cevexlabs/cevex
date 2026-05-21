@@ -130,7 +130,7 @@ export class RegistryClient {
     const provided = options.registryAddress ?? canonicalAddress
 
     if (!provided) {
-      // Allow construction — write ops will fail at call time with a clear error
+      // Allow construction, write ops will fail at call time with a clear error
       this.registryAddress = '0x0000000000000000000000000000000000000000'
     } else {
       this.registryAddress = provided as `0x${string}`
@@ -319,7 +319,7 @@ export class RegistryClient {
           const body = await res.json() as { hash?: string; cid?: string }
           const cid = body.hash ?? body.cid
           if (cid) {
-            // Encode CID as bytes32 — use first 32 bytes of keccak256(cid)
+            // Encode CID as bytes32, use first 32 bytes of keccak256(cid)
             return keccak256Hex(new TextEncoder().encode(cid))
           }
         }
@@ -340,13 +340,13 @@ export class RegistryClient {
     if (!this.walletClient) {
       throw new Error(
         'RegistryClient: write operation requires a private key.\n' +
-        'Pass privateKey: "0x..." to the RegistryClient constructor.'
+        'Pass privateKey: "0xPrivateKey" to the RegistryClient constructor.'
       )
     }
     if (this.registryAddress === '0x0000000000000000000000000000000000000000') {
       throw new Error(
         'RegistryClient: registry contract address is not configured.\n' +
-        'Pass registryAddress: "0x..." to the RegistryClient constructor, or set it in CEVEX_REGISTRY_ADDRESS.'
+        'Pass registryAddress: "0xRegistryAddress" to the RegistryClient constructor, or set it in CEVEX_REGISTRY_ADDRESS.'
       )
     }
   }
@@ -369,7 +369,7 @@ function isNotFoundError(err: unknown): boolean {
 async function keccak256Hex(data: Uint8Array): Promise<`0x${string}`> {
   // Use Web Crypto API (available in Node.js 18+) for keccak256 isn't natively available
   // Instead use a simple SHA-256 as fallback for the metadata commitment
-  // (not security-critical — this is just an off-chain metadata anchor)
+  // (not security-critical, this is just an off-chain metadata anchor)
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
   const hashArray = new Uint8Array(hashBuffer)
   const hex = Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('')

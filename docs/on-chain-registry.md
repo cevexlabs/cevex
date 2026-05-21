@@ -1,6 +1,18 @@
 # On-Chain Registry
 
-CEVEX agent identities are anchored on Base as smart contracts. The registry provides a decentralized, append-only record of all provisioned agent public keys, with Ethereum-secured finality and permissionless read access.
+CEVEX agent identities are designed to be anchored on Base through an immutable registry contract. The repository includes the registry source, interface, and client integration path for a decentralized, append-only record of provisioned agent public keys.
+
+---
+
+## Current Status
+
+| Component | Status |
+|---|---|
+| `CevexRegistry.sol` | Source ready |
+| Registry interface | Implemented |
+| TypeScript registry client | Source ready |
+| Canonical Base deployment address | Release item |
+| Public key lookup flow | Implemented client surface |
 
 ---
 
@@ -81,7 +93,7 @@ The same public key always produces the same address. Two agents with different 
 ```solidity
 function registerAgent(
     bytes calldata publicKey,
-    uint8 scheme,           // 0 = Dilithium, 1 = FALCON
+    uint8 scheme,           // 0 = Dilithium, 1 = FALCON reserved
     uint8 securityLevel,    // 2, 3, or 5
     bytes32 metadataHash
 ) external returns (address agentAddress);
@@ -109,7 +121,7 @@ Full contract source: [contracts/CevexRegistry.sol](../contracts/CevexRegistry.s
 
 ## Base Network Rationale
 
-**Ethereum security.** Base posts state roots to Ethereum L1. The registry has the same finality guarantees as Ethereum mainnet without L1 gas costs.
+**Ethereum security.** Base posts state roots to Ethereum L1. A deployed registry receives Ethereum-backed finality without L1 gas costs.
 
 **EVM compatibility.** Any EVM library can query agent identities. No special tooling required.
 

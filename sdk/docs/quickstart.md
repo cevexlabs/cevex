@@ -1,14 +1,14 @@
 # Quickstart
 
-Get a CEVEX agent running in under 5 minutes.
+Get a CEVEX agent running for local validation or testnet integration in under 5 minutes.
 
 ---
 
 ## Prerequisites
 
 - Node.js 18+ or Python 3.10+
-- Access to a hardware QRNG device (or use `software` mode for development)
-- A funded wallet on Base for gas (agent registration costs under $0.01)
+- `software` entropy for development, or hardware QRNG access for production
+- A funded wallet when submitting registry writes to Base or Base Sepolia
 
 ---
 
@@ -150,14 +150,15 @@ async def main():
 
 ---
 
-## Moving to Mainnet
+## Moving to Production
 
-When you're ready to move from testnet to mainnet:
+When the application moves from local validation to a production registry path:
 
 1. Change `network: 'base-sepolia'` to `network: 'base'`
 2. Replace `entropySource: 'software'` with `entropySource: 'hardware-qrng'`
-3. Ensure your deployment environment has a certified hardware QRNG attached
-4. Ensure your agent's secret key is stored inside an HSM or TEE
+3. Set the canonical registry address for the deployment environment
+4. Ensure the deployment environment has an approved hardware entropy source
+5. Store the agent secret key inside an HSM, TEE, or equivalent secure boundary
 
 ---
 

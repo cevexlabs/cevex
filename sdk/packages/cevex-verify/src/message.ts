@@ -2,7 +2,7 @@
  * Message byte reconstruction for the verifier.
  *
  * Duplicates the canonical encoding from @cevex/agent/src/message.ts.
- * Both implementations must produce identical output — any divergence
+ * Both implementations must produce identical output, any divergence
  * will cause verification to fail. They are kept in sync manually.
  *
  * Wire format (all integers big-endian):

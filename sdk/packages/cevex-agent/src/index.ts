@@ -148,7 +148,7 @@ export class CevexAgent {
    * Load an existing agent from stored key material.
    *
    * Use this to restore an agent after a restart.
-   * Both publicKey and secretKey must be provided — ML-DSA does not allow
+   * Both publicKey and secretKey must be provided, ML-DSA does not allow
    * recovering the public key from the secret key alone.
    */
   static async fromKeyPair(
@@ -285,7 +285,7 @@ export class CevexAgent {
 
   /**
    * Export the current key material for persistence.
-   * Store the result securely — the secretKey is the root of agent identity.
+   * Store the result securely, the secretKey is the root of agent identity.
    */
   exportKeyPair(): KeyPair {
     return {

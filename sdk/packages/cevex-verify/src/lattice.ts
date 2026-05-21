@@ -29,7 +29,7 @@ export function verifySignature(
 
   if (scheme === 'falcon512' || scheme === 'falcon1024') {
     throw new Error(
-      `verifySignature(${scheme}): FALCON verification is not yet available.`
+      `verifySignature(${scheme}): FALCON verification is reserved for the audited secondary release.`
     )
   }
 
@@ -45,7 +45,7 @@ export function dilithiumVerify(
   msg: Uint8Array,
   sig: Uint8Array,
 ): boolean {
-  // Scheme is determined at call site — use dilithium3 as fallback when
+  // Scheme is determined at call site, use dilithium3 as fallback when
   // called from the verifier without scheme context (legacy path)
   return (
     coreVerify(pk, msg, sig, 'dilithium2') ||
@@ -59,5 +59,5 @@ export function falconVerify(
   _msg: Uint8Array,
   _sig: Uint8Array,
 ): boolean {
-  throw new Error('FALCON verification is not yet available.')
+  throw new Error('FALCON verification is reserved for the audited secondary release.')
 }

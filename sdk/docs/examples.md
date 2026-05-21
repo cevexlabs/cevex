@@ -3,7 +3,7 @@
 Annotated examples covering common CEVEX use cases.
 
 {% hint style="info" %}
-Full examples are being completed alongside the SDK release. See [Quickstart](quickstart.md) to get started today.
+Runnable local validation is available in `examples/run.mjs`. The examples below show the SDK integration shape for applications.
 {% endhint %}
 
 ---
@@ -13,11 +13,11 @@ Full examples are being completed alongside the SDK release. See [Quickstart](qu
 ```typescript
 import { CevexAgent, CevexVerifier } from '@cevex/sdk'
 
-// Provision a new agent with hardware quantum entropy
+// Provision a new agent for local or testnet validation
 const agent = await CevexAgent.provision({
-  entropySource: 'hardware-qrng',
+  entropySource: 'software',
   scheme: 'dilithium3',
-  network: 'base'
+  network: 'base-sepolia'
 })
 
 console.log('Agent address:', agent.address)
@@ -33,7 +33,7 @@ const signed = await agent.sign({
 })
 
 // Verify from any participant
-const verifier = new CevexVerifier({ network: 'base' })
+const verifier = new CevexVerifier({ network: 'base-sepolia' })
 const result = await verifier.verify(signed)
 console.log('Valid:', result.valid)
 ```
@@ -45,9 +45,9 @@ console.log('Valid:', result.valid)
 ```typescript
 import { CevexVerifier } from '@cevex/sdk'
 
-const verifier = new CevexVerifier({ network: 'base' })
+const verifier = new CevexVerifier({ network: 'base-sepolia' })
 
-// Verify multiple signatures in a single pass (~3x faster than sequential)
+// Verify multiple signatures through the shared batch result surface
 const results = await verifier.verifyBatch([signed1, signed2, signed3, signed4])
 
 console.log('All valid:', results.allValid)
@@ -60,10 +60,10 @@ console.log('Failed:', results.failed)
 ## Key Rotation (TypeScript)
 
 ```typescript
-// Rotate to a fresh quantum-entropy keypair
-// On-chain address remains the same
+// Rotate to a fresh keypair
+// Registry identity remains the same when connected to a deployed registry
 const { rotationTxHash } = await agent.rotateKey({
-  entropySource: 'hardware-qrng',
+  entropySource: 'software',
   reason: 'scheduled-rotation'
 })
 
@@ -82,7 +82,7 @@ import { readFileSync } from 'fs'
 const secretKey = readFileSync('./agent.key')
 
 const agent = await CevexAgent.fromSecretKey(secretKey, 'dilithium3', {
-  network: 'base'
+  network: 'base-sepolia'
 })
 
 console.log('Agent restored:', agent.address)
@@ -96,9 +96,9 @@ console.log('Agent restored:', agent.address)
 from cevex import CevexAgent, CevexVerifier
 
 agent = await CevexAgent.provision(
-    entropy_source="hardware-qrng",
+    entropy_source="software",
     scheme="dilithium3",
-    network="base"
+    network="base-sepolia"
 )
 
 signed = await agent.sign({
@@ -107,7 +107,7 @@ signed = await agent.sign({
     "amount": "1000000"
 })
 
-verifier = CevexVerifier(network="base")
+verifier = CevexVerifier(network="base-sepolia")
 result = await verifier.verify(signed)
 print(f"Valid: {result.valid}")
 ```

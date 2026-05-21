@@ -160,7 +160,7 @@ $$\Lambda_q^h = \{ (u, v) \in R^2 : u + hv \equiv 0 \pmod{q} \}$$
 
 The hardness assumption is that given $h = g/f \pmod{q}$ where $f, g$ are short, it is computationally hard to find any short vector in $\Lambda_q^h$ without knowing $f$ and $g$.
 
-FALCON signing uses the Fast Fourier Nearest Plane (FFNP) algorithm to sample from a Gaussian distribution over $\Lambda_q^h$ centered at a target point derived from $H(r \| m)$. The security of this construction relies on the fact that the Gaussian distribution over the lattice is statistically close to uniform over all possible cosets, regardless of which target point is used. An adversary observing many signatures cannot recover $f$ and $g$ from the Gaussian samples.
+FALCON signing, reserved for the secondary path, uses the Fast Fourier Nearest Plane (FFNP) algorithm to sample from a Gaussian distribution over $\Lambda_q^h$ centered at a target point derived from $H(r \| m)$. The security of this construction relies on the fact that the Gaussian distribution over the lattice is statistically close to uniform over all possible cosets, regardless of which target point is used. An adversary observing many signatures cannot recover $f$ and $g$ from the Gaussian samples.
 
 ---
 
@@ -185,5 +185,5 @@ The security proofs for both Dilithium and FALCON use the Random Oracle Model (R
 ## See Also
 
 - [Security Model](security-model.md): How these primitives translate to concrete security guarantees
-- [Signatures](signatures.md): How Dilithium and FALCON are deployed in practice
+- [Signatures](signatures.md): Dilithium implementation details and the FALCON release path
 - [Key Generation](key-generation.md): The quantum entropy input to the KDF

@@ -7,7 +7,7 @@
  * File format (JSON):
  * {
  *   "cevexKeyFile": "1",
- *   "agentAddress": "0x...",
+ *   "agentAddress": "0xAgentAddress",
  *   "scheme": "dilithium3",
  *   "network": "base",
  *   "kdf": "scrypt",
@@ -21,7 +21,7 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypt
 import { readFileSync, writeFileSync } from 'fs'
 import type { KeyPair, SignatureScheme } from '@cevex/core'
 
-// scrypt parameters — deliberately conservative for key material
+// scrypt parameters, deliberately conservative for key material
 const SCRYPT_N = 1 << 17  // 131072
 const SCRYPT_R = 8
 const SCRYPT_P = 1

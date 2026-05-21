@@ -2,7 +2,7 @@
  * @cevex/core
  *
  * Post-quantum cryptographic primitives for the CEVEX protocol.
- * Implements CRYSTALS-Dilithium (NIST FIPS 204) and FALCON (NIST FIPS 206).
+ * Provides CRYSTALS-Dilithium and reserved FALCON bindings.
  */
 
 export * from './dilithium'

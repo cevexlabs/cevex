@@ -4,7 +4,7 @@
 
 **Command-line interface for CEVEX agent provisioning and key management**
 
-![npm](https://img.shields.io/npm/v/@cevex/cli?style=flat-square&color=003399)
+![CLI](https://img.shields.io/badge/cli-source-003399?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-001650?style=flat-square)
 ![Network](https://img.shields.io/badge/network-Base-0052FF?style=flat-square)
 
@@ -14,8 +14,19 @@
 
 ## Installation
 
+**Release package:**
+
 ```bash
 npm install -g @cevex/cli
+```
+
+**Source package:**
+
+Source builds expect the local SDK packages to be linked in the release workspace.
+
+```bash
+cd cli
+npm run build
 ```
 
 Verify:
@@ -30,13 +41,13 @@ cevex --version
 
 ### `cevex provision`
 
-Provision a new agent identity on Base.
+Provision a new agent identity locally, or register it on Base when a deployer key and registry address are configured.
 
 ```bash
 cevex provision \
-  --entropy hardware-qrng \
+  --entropy software \
   --scheme dilithium3 \
-  --network base \
+  --network base-sepolia \
   --out ./agent.key
 ```
 
@@ -50,21 +61,23 @@ Options:
 | `--out` | `./agent.key` | Output path for encrypted secret key file. |
 | `--metadata` | none | Path to JSON metadata file to anchor on-chain. |
 | `--rpc` | public Base RPC | Custom RPC URL. |
+| `--deployer-key` | env `CEVEX_DEPLOYER_KEY` | Wallet private key for registry writes. |
+| `--registry` | canonical address | Override registry contract address. |
 
 Output:
 
 ```
 Provisioning agent on Base...
-Sampling quantum entropy...   done
-Deriving keypair (dilithium3)... done
-Registering on Base...        done
+  Network:  base-sepolia
+  Scheme:   dilithium3
+  Entropy:  software
+
+Sampling entropy...          done
 
 Agent address:  0x1a2b3c4d...
-Tx hash:        0xabc123...
 Key saved to:   ./agent.key (encrypted)
 
-Agent is live. Verify with:
-  cevex info 0x1a2b3c4d...
+Agent provisioned locally. Run with --deployer-key to register on Base.
 ```
 
 ---

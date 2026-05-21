@@ -1,6 +1,15 @@
 # Post-Quantum Signatures
 
-CEVEX authenticates all agent operations using post-quantum digital signature schemes. Both schemes were selected by NIST in the Post-Quantum Cryptography standardization process and published as federal standards.
+CEVEX authenticates agent operations using post-quantum digital signature schemes. The active implementation path uses CRYSTALS-Dilithium. FALCON remains part of the protocol design as a reserved secondary scheme for a later audited release.
+
+---
+
+## Implementation Status
+
+| Scheme | Standard | Role | Repository status |
+|---|---|---|---|
+| CRYSTALS-Dilithium | NIST FIPS 204, ML-DSA family | Default signing path | Implemented |
+| FALCON | NIST FIPS 206, FN-DSA family | Compact secondary path | Reserved interface |
 
 ---
 
@@ -15,14 +24,14 @@ graph LR
         D1["Security: Module LWE + Module SIS"]
         D2["Sig size: 3293 bytes (level 3)"]
         D3["Signing: Fast"]
-        D4["Use: Default for all agents"]
+        D4["Use: Default active scheme"]
     end
 
     subgraph Falcon["FALCON (NIST FIPS 206)"]
         F1["Security: NTRU Lattice"]
         F2["Sig size: 666 bytes (level 2)"]
         F3["Signing: Slower (Gaussian sampler)"]
-        F4["Use: High-frequency, bandwidth-constrained"]
+        F4["Use: Reserved compact scheme"]
     end
 
     SIG["Signature sigma"]
@@ -84,9 +93,9 @@ Accept if $\tilde{c} = H(\mu \| \mathbf{w}_1')$ and $\|\mathbf{z}\|_\infty < \ga
 
 ---
 
-## FALCON (NIST FIPS 206)
+## FALCON Release Path (NIST FIPS 206)
 
-FALCON uses a different lattice structure: the NTRU lattice. Signing is equivalent to solving a closest vector problem using a trapdoor short basis.
+FALCON uses a different lattice structure: the NTRU lattice. Signing is equivalent to solving a closest vector problem using a trapdoor short basis. CEVEX keeps the public interface reserved so applications can understand the planned scheme boundary without treating it as the active signing path.
 
 **Key generation:**
 
@@ -108,7 +117,7 @@ Check that $(\mathbf{s}_1, \mathbf{s}_2)$ is short and the equation holds.
 
 ---
 
-## Performance
+## Reference Performance Profile
 
 | Operation | Dilithium-3 | FALCON-512 |
 |-----------|-------------|------------|
@@ -118,7 +127,7 @@ Check that $(\mathbf{s}_1, \mathbf{s}_2)$ is short and the equation holds.
 | Signatures per second | ~5,800 | ~3,200 |
 | Signature size | 3293 B | 666 B |
 
-FALCON key generation cost is paid once at provisioning. In steady-state operation, FALCON's smaller signatures make it the preferred choice for high-frequency agents where calldata costs matter.
+The active developer path should use Dilithium. FALCON's smaller signatures remain valuable for high-frequency agents where calldata size matters, subject to a production-ready implementation and review.
 
 ---
 

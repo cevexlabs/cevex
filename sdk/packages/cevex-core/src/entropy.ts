@@ -60,7 +60,7 @@ export async function sampleEntropy(
     return await fetchQrngEntropy(qrngUrl, bytes)
   }
 
-  // No QRNG URL configured — fail loudly rather than silently downgrade
+  // No QRNG URL configured, fail loudly rather than silently downgrade
   throw new EntropyError(
     'hardware-qrng entropy requested but CEVEX_QRNG_URL is not set.\n' +
     'Set CEVEX_QRNG_URL to a QRNG API endpoint, or use entropySource: "software" for development.\n' +

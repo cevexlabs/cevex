@@ -135,7 +135,7 @@ contract CevexRegistry is ICevexRegistry {
 
         // Signature verification is performed off-chain by the CEVEX protocol layer.
         // The contract records the authorized rotation on-chain.
-        // A full on-chain post-quantum verifier will be added in a future upgrade.
+        // On-chain post-quantum verification is kept outside this registry source.
 
         bytes32 oldKeyHash = keccak256(identity.publicKey);
         bytes32 newKeyHash = keccak256(newPublicKey);

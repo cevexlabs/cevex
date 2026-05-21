@@ -6,14 +6,14 @@
 
 **Post-quantum cryptographic identity infrastructure for autonomous AI agents**
 
-Anchored on Base. Secured beyond classical limits.
+Built for Base. Secured beyond classical limits.
 
 <br/>
 
 ![License](https://img.shields.io/badge/license-MIT-003399?style=flat-square)
 ![Network](https://img.shields.io/badge/network-Base-0052FF?style=flat-square)
 ![PQC Standard](https://img.shields.io/badge/PQC-NIST%20Selected-003399?style=flat-square)
-![Status](https://img.shields.io/badge/status-mainnet-1a7fff?style=flat-square)
+![Status](https://img.shields.io/badge/status-active%20build-1a7fff?style=flat-square)
 ![Horizon](https://img.shields.io/badge/security%20horizon-2080-001650?style=flat-square)
 
 <br/>
@@ -28,9 +28,9 @@ As autonomous agents proliferate across financial, logistical, and computational
 
 CEVEX addresses this through the convergence of three primitives:
 
-- **Hardware quantum entropy** sourced from photonic measurement and vacuum state fluctuation, producing keys whose uniqueness is bounded by physical law rather than algorithmic complexity
-- **Post-quantum lattice signatures** using CRYSTALS-Dilithium and FALCON, both selected by NIST in the PQC standardization process, providing existential unforgeability against classical and quantum adversaries simultaneously
-- **Decentralized on-chain registry** anchored to Base, giving each agent identity Ethereum-secured finality and a trustless verification path requiring no certificate authorities
+- **Quantum-rooted entropy** using the hardware QRNG interface or local development entropy, with SHAKE-256 conditioning before key derivation
+- **Post-quantum lattice signatures** using CRYSTALS-Dilithium as the active signing path, with FALCON reserved as the secondary NIST scheme for the audited release path
+- **Decentralized registry design** for Base, giving each agent identity Ethereum-secured finality and a trustless verification path that does not require certificate authorities
 
 ---
 
@@ -44,7 +44,7 @@ graph LR
     SK["Secret Key\nsk"]
     PK["Public Key\npk"]
     DIL["Dilithium\nFIPS 204"]
-    FAL["FALCON\nFIPS 206"]
+    FAL["FALCON\nReserved"]
     SIG["Signature\nsigma"]
     LAT["Trustless Verify\nNo CA"]
     BASE["Base Registry\nOn-Chain Identity"]
@@ -55,7 +55,7 @@ graph LR
     SK --> DIL
     SK --> FAL
     DIL --> SIG
-    FAL --> SIG
+    FAL -.-> SIG
     SIG --> LAT
     PK --> BASE
 
@@ -112,16 +112,18 @@ sequenceDiagram
 
 | Layer | Component | Specification | Status |
 |-------|-----------|---------------|--------|
-| Entropy | Hardware QRNG | Photonic measurement + vacuum state fluctuation | Live |
-| Entropy Compliance | NIST SP 800-90B | Min-entropy estimation and health testing | Live |
-| Key Derivation | Quantum-seeded KDF | Deterministic derivation from quantum seed | Live |
-| Primary Signing | CRYSTALS-Dilithium | NIST FIPS 204 | Live |
-| Alt Signing | FALCON | NIST FIPS 206 | Live |
-| Security Assumption | Module LWE | Reduction to M-LWE hardness | Live |
-| Verification | Trustless lattice arithmetic | No certificate authority required | Live |
-| Batch Verification | Parallelized verifier | ZK-compatible audit transcripts | Live |
-| Registry | Base smart contracts | Append-only, Ethereum-secured finality | Live |
-| SDK | Developer tooling | TypeScript and Python bindings | Coming Soon |
+| Entropy | Hardware QRNG interface and development entropy | SHAKE-256 conditioning | Implemented |
+| Entropy Compliance | NIST SP 800-90B profile | RCT and APT health checks | Specified |
+| Key Derivation | Quantum-seeded KDF | Deterministic derivation from conditioned seed | Implemented |
+| Primary Signing | CRYSTALS-Dilithium | NIST FIPS 204, ML-DSA family | Implemented |
+| Secondary Signing | FALCON | NIST FIPS 206, FN-DSA family | Reserved interface |
+| Security Assumption | Module LWE | Reduction to M-LWE hardness | Implemented |
+| Verification | Trustless lattice arithmetic | No certificate authority required | Implemented |
+| Batch Verification | Parallel verifier surface | Parallel local checks | Implemented |
+| Registry | Base smart contract source | Append-only identity records | Source ready |
+| SDK | Developer tooling | TypeScript packages and Python parity path | Active build |
+| CLI | Terminal tooling | Provision, sign, verify, rotate, revoke, inspect | Implemented |
+| Examples | Local protocol validation | Keygen, signing, verification, tamper rejection | Implemented |
 
 ---
 
@@ -145,7 +147,7 @@ cevex/
 |----------|-------------|
 | [Protocol Overview](docs/overview.md) | High-level explanation of the CEVEX protocol |
 | [Key Generation](docs/key-generation.md) | Quantum entropy sourcing and key derivation |
-| [Post-Quantum Signatures](docs/signatures.md) | CRYSTALS-Dilithium and FALCON in detail |
+| [Post-Quantum Signatures](docs/signatures.md) | Dilithium implementation and FALCON release path |
 | [Trustless Verification](docs/verification.md) | Verification without trusted parties |
 | [On-Chain Registry](docs/on-chain-registry.md) | Base smart contract identity layer |
 | [Security Model](docs/security-model.md) | Threat model and formal security properties |
@@ -159,14 +161,14 @@ cevex/
 import { CevexAgent, CevexVerifier } from '@cevex/sdk'
 
 const agent = await CevexAgent.provision({
-  entropySource: 'hardware-qrng',
+  entropySource: 'software',
   scheme: 'dilithium3',
-  network: 'base'
+  network: 'base-sepolia'
 })
 
 const signed = await agent.sign({ action: 'transfer', amount: '100' })
 
-const verifier = new CevexVerifier({ network: 'base' })
+const verifier = new CevexVerifier({ network: 'base-sepolia' })
 const result = await verifier.verify(signed)
 // { valid: true, active: true, scheme: 'dilithium3' }
 ```
@@ -174,9 +176,13 @@ const result = await verifier.verify(signed)
 ```python
 from cevex import CevexAgent, CevexVerifier
 
-agent = await CevexAgent.provision(scheme="dilithium3", network="base")
+agent = await CevexAgent.provision(
+    entropy_source="software",
+    scheme="dilithium3",
+    network="base-sepolia"
+)
 signed = await agent.sign({"action": "transfer", "amount": "100"})
-result = await CevexVerifier(network="base").verify(signed)
+result = await CevexVerifier(network="base-sepolia").verify(signed)
 ```
 
 See [sdk/README.md](sdk/README.md) for full documentation.
@@ -185,13 +191,16 @@ See [sdk/README.md](sdk/README.md) for full documentation.
 
 ## Roadmap
 
-- [x] Quantum entropy key generation
-- [x] CRYSTALS-Dilithium signing
-- [x] FALCON signing
-- [x] Trustless on-chain registry on Base
-- [x] Batch verification
-- [ ] Developer SDK (TypeScript + Python)
-- [ ] CLI tooling
+- [x] Quantum-conditioned key generation
+- [x] CRYSTALS-Dilithium signing and verification
+- [x] Local tamper rejection demo
+- [x] Batch verification surface
+- [x] Base registry smart contract source
+- [x] TypeScript SDK package structure
+- [x] CLI command surface
+- [ ] Canonical Base deployment addresses
+- [ ] FALCON audited implementation
+- [ ] Python SDK parity
 - [ ] ZK audit transcript tooling
 - [ ] Cross-chain registry bridges
 

@@ -7,7 +7,7 @@
 ![Solidity](https://img.shields.io/badge/solidity-0.8.24-003399?style=flat-square)
 ![Network](https://img.shields.io/badge/network-Base-0052FF?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-001650?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-passing-1a7fff?style=flat-square)
+![Status](https://img.shields.io/badge/status-source%20ready-1a7fff?style=flat-square)
 
 </div>
 
@@ -15,16 +15,16 @@
 
 ## Overview
 
-This repository contains the smart contracts powering the CEVEX on-chain identity registry on Base. The registry provides a decentralized, append-only record of all provisioned CEVEX agent identities, backed by Ethereum-secured finality.
+This directory contains the smart contract source for the CEVEX on-chain identity registry on Base. The registry provides a decentralized, append-only record of provisioned agent identities, backed by Ethereum-secured finality once deployed.
 
 ---
 
 ## Contracts
 
-| Contract | Address (Base Mainnet) | Description |
-|----------|----------------------|-------------|
-| `CevexRegistry` | `0x...` | Singleton registry. Manages all agent identity records. |
-| `ICevexRegistry` | N/A | Interface for external integrators. |
+| Contract | Deployment status | Description |
+|----------|-------------------|-------------|
+| `CevexRegistry` | Source ready | Singleton registry. Manages all agent identity records. |
+| `ICevexRegistry` | Source ready | Interface for external integrators. |
 
 ---
 
@@ -55,29 +55,26 @@ AgentIdentity (struct, stored per agent in registry mapping)
 
 ---
 
-## Installation
+## Source Integration
 
-```bash
-npm install
-```
+The contract source is framework neutral and can be imported into a Hardhat or Foundry workspace.
 
-Requires Node.js 18+ and Hardhat.
-
----
-
-## Testing
-
-```bash
-npm test
-```
-
-```bash
-npm run test:coverage
-```
+| File | Purpose |
+|---|---|
+| `CevexRegistry.sol` | Registry implementation |
+| `interfaces/ICevexRegistry.sol` | External integration interface |
 
 ---
 
-## Deployment
+## Testing and Deployment
+
+```bash
+npx hardhat compile
+```
+
+```bash
+forge test
+```
 
 **Base Sepolia (testnet):**
 
@@ -91,7 +88,7 @@ npx hardhat deploy --network base-sepolia
 npx hardhat deploy --network base
 ```
 
-Deployment addresses are recorded in `deployments/`.
+Canonical deployment addresses are published after the deployment transaction is finalized and verified.
 
 ---
 

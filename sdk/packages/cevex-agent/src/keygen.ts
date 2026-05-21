@@ -34,7 +34,7 @@ export function deriveKeyPair(
   }
 
   throw new Error(
-    `deriveKeyPair: scheme "${scheme}" is not yet supported. Use dilithium2, dilithium3, or dilithium5.`
+    `deriveKeyPair: scheme "${scheme}" is reserved for another release path. Use dilithium2, dilithium3, or dilithium5.`
   )
 }
 
@@ -42,7 +42,7 @@ export function deriveKeyPair(
  * Recover the public key from a stored public key + secret key combination.
  *
  * Note: In ML-DSA (Dilithium), the public key cannot be fully derived from
- * the secret key alone — t1 is not embedded in sk. Always store publicKey
+ * the secret key alone, t1 is not embedded in sk. Always store publicKey
  * alongside secretKey when persisting agent key material.
  */
 export function recoverPublicKey(
@@ -50,7 +50,7 @@ export function recoverPublicKey(
   _secretKey: Uint8Array,
   _scheme: SignatureScheme,
 ): Uint8Array {
-  // Public key is already available — return it directly.
+  // Public key is already available, return it directly.
   // This function exists to make the intent explicit and allow future
   // implementations that can derive pk from sk if the scheme supports it.
   return publicKey

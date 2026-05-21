@@ -86,7 +86,7 @@ No probabilistic polynomial-time adversary $\mathcal{A}$ can produce a valid for
 
 $$\Pr[\text{Verify}(\text{pk}, m^*, \sigma^*) = 1 \ \land \ m^* \notin \mathcal{Q}] \leq \text{negl}(\lambda)$$
 
-Both Dilithium and FALCON satisfy EU-CMA under their respective hardness assumptions.
+The active CEVEX implementation uses Dilithium for EU-CMA security under Module LWE and Module SIS assumptions. FALCON remains a reserved secondary scheme with EU-CMA security under NTRU lattice assumptions once the audited implementation is added.
 
 ---
 

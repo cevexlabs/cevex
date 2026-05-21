@@ -101,8 +101,8 @@ export class CevexVerifier {
   /**
    * Batch verify multiple signed messages.
    *
-   * Uses randomized linear combination for ~3x speedup over sequential verification.
-   * A single invalid signature is detected with probability 1 - q^(-1).
+   * Runs grouped local verification and returns a shared result object.
+   * Algebraic aggregation is kept for the audit transcript release path.
    */
   async verifyBatch(messages: SignedMessage[]): Promise<BatchVerificationResult> {
     if (messages.length === 0) {

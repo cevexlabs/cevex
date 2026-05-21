@@ -7,6 +7,7 @@ const argv = process.argv.slice(2)
 const cmd = (argv.find(arg => !arg.startsWith('-')) ?? '').toLowerCase()
 const jsonMode = argv.includes('--json')
 const renderTerminal = !jsonMode
+const asciiMode = argv.includes('--ascii')
 const colorEnabled = (process.stdout.isTTY || argv.includes('--color')) &&
   !argv.includes('--no-color') &&
   renderTerminal &&
@@ -54,12 +55,16 @@ const identity = text => text
 const stripAnsi = text => String(text).replace(/\x1b\[[0-9;]*m/g, '')
 const visibleLength = text => stripAnsi(text).length
 const terminalColumns = process.stdout.columns || 106
-const WIDTH = Math.max(78, Math.min(106, terminalColumns - 2))
+const WIDTH = Math.max(86, Math.min(116, terminalColumns - 2))
 const FIELD_W = 14
-const NOTE_W = Math.max(24, Math.min(32, Math.floor(WIDTH * 0.3)))
+const NOTE_W = Math.max(26, Math.min(34, Math.floor(WIDTH * 0.3)))
 const VALUE_W = WIDTH - FIELD_W - NOTE_W - 10
 const LABEL_W = 22
 const COMMAND_W = WIDTH - LABEL_W - 7
+
+const box = asciiMode
+  ? { tl: '+', tr: '+', bl: '+', br: '+', h: '-', v: '|', l: '+', r: '+', t: '+', b: '+', x: '+' }
+  : { tl: '╭', tr: '╮', bl: '╰', br: '╯', h: '─', v: '│', l: '├', r: '┤', t: '┬', b: '┴', x: '┼' }
 
 function clip(text, width) {
   const clean = stripAnsi(text)
@@ -83,78 +88,118 @@ function center(text, width) {
 }
 
 function line(char = '-') {
-  return theme.blue('+' + char.repeat(WIDTH - 2) + '+')
+  const h = char === '-' ? box.h : char
+  return theme.blue(box.tl + h.repeat(WIDTH - 2) + box.tr)
 }
 
-function titleLine(title) {
-  const label = ` ${title} `
-  return theme.blue('+') +
-    theme.blue(' ') +
-    theme.white(title) +
-    theme.blue(' ' + '-'.repeat(Math.max(0, WIDTH - label.length - 2)) + '+')
+function titleLine(index, title, subtitle = '') {
+  const badge = index ? theme.primary(index.padStart(2, '0')) + theme.blue(' / ') : ''
+  const titleText = badge + theme.white(title)
+  const cleanTitle = stripAnsi(titleText)
+  const ruleWidth = Math.max(1, WIDTH - cleanTitle.length - 5)
+  const top = theme.blue(box.tl + box.h + ' ') + titleText + theme.blue(' ' + box.h.repeat(ruleWidth) + box.tr)
+
+  if (!subtitle) return top
+
+  return [
+    top,
+    row(subtitle, theme.muted),
+  ].join('\n')
 }
 
 function row(text = '', style = identity) {
-  return theme.blue('|') + ' ' + cell(text, WIDTH - 4, style) + ' ' + theme.blue('|')
+  return theme.blue(box.v) + ' ' + cell(text, WIDTH - 4, style) + ' ' + theme.blue(box.v)
 }
 
-function tableLine() {
+function tableRule(kind = 'mid') {
+  const left = kind === 'top' ? box.tl : kind === 'bottom' ? box.bl : kind === 'left' ? box.l : box.l
+  const right = kind === 'top' ? box.tr : kind === 'bottom' ? box.br : box.r
+  const join = kind === 'top' ? box.t : kind === 'bottom' ? box.b : box.x
   return theme.blue(
-    '+' +
-    '-'.repeat(FIELD_W + 2) +
-    '+' +
-    '-'.repeat(VALUE_W + 2) +
-    '+' +
-    '-'.repeat(NOTE_W + 2) +
-    '+',
+    left +
+    box.h.repeat(FIELD_W + 2) +
+    join +
+    box.h.repeat(VALUE_W + 2) +
+    join +
+    box.h.repeat(NOTE_W + 2) +
+    right,
   )
 }
 
 function tableRow(field, value, note, valueStyle = theme.white, noteStyle = theme.muted) {
-  return theme.blue('|') + ' ' +
+  return theme.blue(box.v) + ' ' +
     cell(field, FIELD_W, theme.dim) + ' ' +
-    theme.blue('|') + ' ' +
+    theme.blue(box.v) + ' ' +
     cell(value, VALUE_W, valueStyle) + ' ' +
-    theme.blue('|') + ' ' +
+    theme.blue(box.v) + ' ' +
     cell(note, NOTE_W, noteStyle) + ' ' +
-    theme.blue('|')
+    theme.blue(box.v)
 }
 
-function section(title, rows) {
+function groupRule(label) {
+  const text = ` ${label} `
+  const leftWidth = FIELD_W + 2
+  const valueWidth = VALUE_W + 2
+  const noteWidth = NOTE_W + 2
+  const clean = clip(text, Math.max(8, valueWidth - 2))
+
+  return theme.blue(box.l + box.h.repeat(leftWidth) + box.x) +
+    theme.primary(clean) +
+    theme.blue(box.h.repeat(Math.max(0, valueWidth - clean.length)) + box.x + box.h.repeat(noteWidth) + box.r)
+}
+
+function section(index, title, subtitle, rows) {
   if (!renderTerminal) return
-  console.log(titleLine(title))
+  console.log(titleLine(index, title, subtitle))
+  console.log(tableRule())
   console.log(tableRow('Field', 'Value', 'Evidence', theme.bold, theme.bold))
-  console.log(tableLine())
+  console.log(tableRule())
   for (const item of rows) {
     if (item === 'sep') {
-      console.log(tableLine())
+      console.log(tableRule())
+      continue
+    }
+    if (item.group) {
+      console.log(groupRule(item.group))
       continue
     }
     console.log(tableRow(item.field, item.value, item.note, item.valueStyle, item.noteStyle))
   }
-  console.log(tableLine())
+  console.log(tableRule('bottom'))
   console.log()
 }
 
-function commandLine() {
+function commandRule(kind = 'mid') {
+  const left = kind === 'bottom' ? box.bl : box.l
+  const right = kind === 'bottom' ? box.br : box.r
+  const join = kind === 'bottom' ? box.b : box.x
   return theme.blue(
-    '+' +
-    '-'.repeat(LABEL_W + 2) +
-    '+' +
-    '-'.repeat(COMMAND_W + 2) +
-    '+',
+    left +
+    box.h.repeat(LABEL_W + 2) +
+    join +
+    box.h.repeat(COMMAND_W + 2) +
+    right,
   )
 }
 
 function commandRow(label, command, labelStyle = theme.primary, commandStyle = theme.body) {
-  return theme.blue('|') + ' ' +
+  return theme.blue(box.v) + ' ' +
     cell(label, LABEL_W, labelStyle) + ' ' +
-    theme.blue('|') + ' ' +
+    theme.blue(box.v) + ' ' +
     cell(command, COMMAND_W, commandStyle) + ' ' +
-    theme.blue('|')
+    theme.blue(box.v)
 }
 
 const WORDMARK = [
+  '  ██████╗███████╗██╗   ██╗███████╗██╗  ██╗',
+  ' ██╔════╝██╔════╝██║   ██║██╔════╝╚██╗██╔╝',
+  ' ██║     █████╗  ██║   ██║█████╗   ╚███╔╝ ',
+  ' ██║     ██╔══╝  ╚██╗ ██╔╝██╔══╝   ██╔██╗ ',
+  ' ╚██████╗███████╗ ╚████╔╝ ███████╗██╔╝ ██╗',
+  '  ╚═════╝╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝',
+]
+
+const ASCII_WORDMARK = [
   '   ____ _______     _______ __  __',
   '  / ___| ____\\ \\   / / ____| \\/ /',
   ' | |   |  _|  \\ \\ / /|  _|  \\  / ',
@@ -167,15 +212,15 @@ function showBanner() {
   console.log()
   console.log(line())
   console.log(row())
-  for (const logoLine of WORDMARK) {
-    console.log(row(center(logoLine, WIDTH - 4), theme.blue))
+  for (const logoLine of asciiMode ? ASCII_WORDMARK : WORDMARK) {
+    console.log(row(center(logoLine, WIDTH - 4), theme.primary))
   }
   console.log(row())
   console.log(row(center('Post-quantum identity for autonomous AI agents', WIDTH - 4), theme.bold))
   console.log(row(center('ML-DSA-65 / NIST FIPS 204 / Base registry compatible', WIDTH - 4), theme.dim))
   console.log(row(center('Local protocol validation - no network calls', WIDTH - 4), theme.muted))
   console.log(row())
-  console.log(line())
+  console.log(theme.blue(box.bl + box.h.repeat(WIDTH - 2) + box.br))
   console.log()
 }
 
@@ -246,15 +291,16 @@ function runKeygen() {
   const publicKeyHash = digestHex(publicKey)
   const elapsed = performance.now() - started
 
-  section('[1/3] Key Generation', [
+  section('01', 'Key Generation', 'Generate a fresh ML-DSA identity from conditioned entropy', [
+    { group: 'Parameters' },
     { field: 'Scheme', value: 'CRYSTALS-Dilithium / ML-DSA-65', note: 'NIST FIPS 204' },
     { field: 'Security', value: '162-bit post-quantum target', note: 'Module LWE' },
     { field: 'Entropy', value: 'OS CSPRNG -> SHAKE-256 seed', note: 'local demo mode' },
-    'sep',
+    { group: 'Identity Material' },
     { field: 'Public key', value: `${publicKey.length} bytes`, note: `hash ${abbr(publicKeyHash, 8, 8)}` },
     { field: 'Secret key', value: `${secretKey.length} bytes  redacted`, note: 'never printed' },
     { field: 'Address', value: agentAddress, note: 'keccak256(pk)[12..32]' },
-    'sep',
+    { group: 'Timing' },
     { field: 'Elapsed', value: ms(elapsed), note: 'seed + keypair', valueStyle: theme.success },
   ])
 
@@ -285,15 +331,16 @@ function runSign(keygen) {
   const signatureHash = digestHex(signature)
   const elapsed = performance.now() - started
 
-  section('[2/3] Message Signing', [
+  section('02', 'Message Signing', 'Bind a structured action to the CEVEX-MSG-v1 domain', [
+    { group: 'Action' },
     { field: 'Payload', value: 'transfer 100 USDC on Base', note: 'JSON action' },
     { field: 'Nonce', value: String(nonce), note: 'replay guard' },
     { field: 'Timestamp', value: new Date(timestamp).toISOString(), note: 'UTC ms' },
     { field: 'Domain', value: 'CEVEX-MSG-v1', note: 'protocol binding', valueStyle: theme.cyan },
-    'sep',
+    { group: 'Artifacts' },
     { field: 'Signed bytes', value: `${signedBytes.length} bytes`, note: `hash ${abbr(signedBytesHash, 8, 8)}` },
     { field: 'Signature', value: `${signature.length} bytes`, note: `hash ${abbr(signatureHash, 8, 8)}` },
-    'sep',
+    { group: 'Timing' },
     { field: 'Elapsed', value: ms(elapsed), note: 'signature time', valueStyle: theme.success },
   ])
 
@@ -322,11 +369,12 @@ function runVerify(keygen, signing) {
   tamperedMessage[tamperedMessage.length - 1] ^= 0x01
   const messageTamperAccepted = ml_dsa65.verify(keygen.publicKey, tamperedMessage, signing.signature)
 
-  section('[3/3] Verification', [
+  section('03', 'Verification', 'Validate the signature and reject modified inputs', [
+    { group: 'Inputs' },
     { field: 'Input', value: 'public key + signed bytes + signature', note: 'no CA' },
     { field: 'Lookup', value: 'in-memory public key', note: 'registry-free demo' },
     { field: 'Trust anchor', value: 'none', note: 'local lattice math', valueStyle: theme.cyan },
-    'sep',
+    { group: 'Checks' },
     {
       field: 'Signature',
       value: valid ? 'VALID' : 'INVALID',
@@ -345,7 +393,7 @@ function runVerify(keygen, signing) {
       note: 'payload bit flip',
       valueStyle: messageTamperAccepted ? theme.danger : theme.success,
     },
-    'sep',
+    { group: 'Timing' },
     { field: 'Elapsed', value: ms(elapsed), note: 'verification time', valueStyle: theme.success },
   ])
 
@@ -358,7 +406,8 @@ function showSummary(keygen, signing, verification) {
     !verification.signatureTamperAccepted &&
     !verification.messageTamperAccepted
 
-  section('Summary', [
+  section('04', 'Run Summary', 'Protocol validation result and execution profile', [
+    { group: 'Result' },
     {
       field: 'Run result',
       value: passed ? 'PASS' : 'FAIL',
@@ -366,6 +415,7 @@ function showSummary(keygen, signing, verification) {
       valueStyle: passed ? theme.success : theme.danger,
     },
     { field: 'Total time', value: ms(total), note: 'keygen + sign + verify', valueStyle: theme.success },
+    { group: 'Context' },
     { field: 'PQC scheme', value: 'CRYSTALS-Dilithium / ML-DSA-65', note: 'default path' },
     { field: 'Identity', value: keygen.agentAddress, note: 'registry-ready' },
     { field: 'Artifacts', value: 'none written to disk', note: 'demo is memory-only' },
@@ -374,9 +424,10 @@ function showSummary(keygen, signing, verification) {
 
 function showCliReference() {
   if (!renderTerminal) return
-  console.log(titleLine('CLI Reference'))
+  console.log(titleLine('', 'CLI Reference', 'Commands aligned with the current CLI surface'))
+  console.log(commandRule())
   console.log(commandRow('Command', 'Example', theme.bold, theme.bold))
-  console.log(commandLine())
+  console.log(commandRule())
   console.log(commandRow('install', 'npm install -g @cevex/cli', theme.dim, theme.dim))
   console.log(commandRow('provision', 'cevex provision --entropy software --scheme dilithium3 --out agent.key'))
   console.log(commandRow('sign', 'cevex sign --key agent.key --message message.json --out signed.json'))
@@ -385,12 +436,13 @@ function showCliReference() {
   console.log(commandRow('rotate', 'cevex rotate --key agent.key --entropy software --out rotated.key'))
   console.log(commandRow('revoke', 'cevex revoke --key agent.key --reason decommissioned --yes'))
   console.log(commandRow('batch-verify', 'cevex batch-verify --messages signed-batch.json'))
-  console.log(commandLine())
+  console.log(commandRule('bottom'))
   console.log()
 
-  console.log(titleLine('Demo Commands'))
+  console.log(titleLine('', 'Demo Commands', 'Local validation modes and output controls'))
+  console.log(commandRule())
   console.log(commandRow('Command', 'Description', theme.bold, theme.bold))
-  console.log(commandLine())
+  console.log(commandRule())
   console.log(commandRow('node run.mjs', 'full protocol validation'))
   console.log(commandRow('node run.mjs keygen', 'run key generation only'))
   console.log(commandRow('node run.mjs sign', 'run key generation and signing'))
@@ -398,13 +450,14 @@ function showCliReference() {
   console.log(commandRow('node run.mjs help', 'show this screen'))
   console.log(commandRow('--json', 'emit machine-readable validation result'))
   console.log(commandRow('--color / --no-color', 'force or disable branded terminal colors'))
-  console.log(commandLine())
+  console.log(commandRow('--ascii', 'use plain ASCII borders and wordmark'))
+  console.log(commandRule('bottom'))
   console.log()
 }
 
 function showHelp() {
   showBanner()
-  section('About', [
+  section('00', 'About', 'Offline developer validation for the CEVEX message flow', [
     { field: 'Purpose', value: 'local CEVEX protocol validation', note: 'developer demo' },
     { field: 'Crypto', value: 'real ML-DSA-65 keygen/sign/verify', note: '@noble/post-quantum' },
     { field: 'Network', value: 'none', note: 'runs offline' },

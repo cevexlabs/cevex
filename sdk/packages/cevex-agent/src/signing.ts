@@ -27,7 +27,7 @@ export function signMessage(
 
   if (scheme === 'falcon512' || scheme === 'falcon1024') {
     throw new Error(
-      `signMessage(${scheme}): FALCON signing is not yet available. ` +
+      `signMessage(${scheme}): FALCON signing is reserved for the audited secondary release. ` +
       'Use dilithium3 for production workloads.'
     )
   }
@@ -48,5 +48,5 @@ export function dilithiumSign(sk: Uint8Array, msg: Uint8Array): Uint8Array {
 }
 
 export function falconSign(_sk: Uint8Array, _msg: Uint8Array): Uint8Array {
-  throw new Error('FALCON signing is not yet available. Use dilithium3.')
+  throw new Error('FALCON signing is reserved for the audited secondary release. Use dilithium3.')
 }

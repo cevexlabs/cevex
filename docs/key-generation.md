@@ -1,6 +1,6 @@
 # Key Generation
 
-CEVEX agent identities are derived from hardware quantum entropy. This document covers the physical basis of that entropy, the compliance requirements that govern it, and the derivation process that produces a usable cryptographic keypair.
+CEVEX agent identities are derived from conditioned entropy. Production deployments use hardware quantum entropy, while local development can use software entropy for protocol testing. This document covers the physical basis of the production entropy model, the compliance requirements that govern it, and the derivation process that produces a usable cryptographic keypair.
 
 ---
 
@@ -23,10 +23,10 @@ graph TD
     C -->|Yes| E["Raw Entropy\n512 bytes"]
     E --> F["SHAKE-256 Conditioning\nBias and correlation removal"]
     F --> G["Conditioned Seed\n256 bits, uniform"]
-    G --> H["KeyGen\nDilithium or FALCON"]
+    G --> H["KeyGen\nDilithium active"]
     H --> I["Secret Key sk\n4000 bytes"]
     H --> J["Public Key pk\n1952 bytes"]
-    J --> K["Base Registry\nOn-chain anchor"]
+    J --> K["Base Registry\nidentity anchor"]
 
     style A fill:#003399,color:#eff6ff,stroke:#1a7fff
     style B fill:#003399,color:#eff6ff,stroke:#1a7fff

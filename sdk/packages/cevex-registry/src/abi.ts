@@ -1,9 +1,8 @@
 /**
  * CevexRegistry contract ABI.
  *
- * Extracted from contracts/CevexRegistry.sol
- * Deployed on Base Mainnet: address TBD (pending deployment)
- * Deployed on Base Sepolia: address TBD (testnet deployment)
+ * Extracted from contracts/CevexRegistry.sol.
+ * Canonical Base and Base Sepolia addresses are set after deployment.
  */
 
 export const CEVEX_REGISTRY_ABI = [

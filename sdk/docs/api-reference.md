@@ -3,7 +3,7 @@
 Full TypeScript and Python API documentation for all CEVEX SDK packages.
 
 {% hint style="info" %}
-This document is being completed alongside the SDK release. See [Quickstart](quickstart.md) for working examples today.
+This document tracks the active SDK surfaces in the repository. Dilithium is the implemented signing path and FALCON values are reserved for the audited secondary release.
 {% endhint %}
 
 ---

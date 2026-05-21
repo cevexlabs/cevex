@@ -20,7 +20,7 @@ const program = new Command()
 
 program
   .name('cevex')
-  .description('CEVEX — Post-quantum identity for autonomous AI agents on Base')
+  .description('CEVEX, post-quantum identity for autonomous AI agents on Base')
   .version('0.1.0')
 
 program.addCommand(provisionCommand)

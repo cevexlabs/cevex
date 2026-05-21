@@ -20,7 +20,7 @@ npm test
 
 ```
 packages/
-  cevex-core/     Post-quantum primitives (Dilithium, FALCON, KDF)
+  cevex-core/     Post-quantum primitives (Dilithium, FALCON interface, KDF)
   cevex-agent/    Agent provisioning and signing
   cevex-verify/   Signature verification and batch verify
   cevex-registry/ Base registry client

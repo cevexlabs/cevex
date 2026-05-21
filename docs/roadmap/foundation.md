@@ -1,10 +1,10 @@
 # Foundation
 
 {% hint style="success" %}
-**Complete.** The cryptographic foundation is specified and anchored to the Base registry design.
+**Implemented foundation.** The Dilithium identity path, deterministic addressing model, and Base registry source are in place.
 {% endhint %}
 
-The foundation phase establishes the core CEVEX identity primitive: entropy rooted in quantum physical processes, post-quantum signing, deterministic agent addressing, and an append-only on-chain registry. These pieces define the security model that every later developer tool builds on.
+The foundation phase establishes the core CEVEX identity primitive: entropy rooted in quantum physical processes, post-quantum signing, deterministic agent addressing, and an append-only registry model. These pieces define the security model that every later developer tool builds on.
 
 ---
 
@@ -21,7 +21,7 @@ graph TD
 
     subgraph Signing["Signing"]
         DIL["CRYSTALS-Dilithium\nML-DSA"]
-        FAL["FALCON\nFN-DSA"]
+        FAL["FALCON\nreserved"]
     end
 
     subgraph Identity["Identity"]
@@ -32,9 +32,9 @@ graph TD
 
     QRNG --> HEALTH --> KDF
     KDF --> DIL
-    KDF --> FAL
+    KDF -.-> FAL
     DIL --> ADDR
-    FAL --> ADDR
+    FAL -.-> ADDR
     ADDR --> REG
     REG --> VERIFY
 
@@ -54,14 +54,14 @@ graph TD
 
 | Component | Specification | Status |
 |---|---|---|
-| Entropy source | Hardware QRNG with photonic or vacuum state measurements | Complete |
-| Health testing | NIST SP 800-90B RCT and APT checks | Complete |
-| Key derivation | SHAKE-256 conditioned seed derivation | Complete |
-| Primary signature | CRYSTALS-Dilithium, NIST FIPS 204 | Complete |
-| Secondary signature | FALCON, NIST FIPS 206 | Complete |
-| Agent address | `address(uint160(uint256(keccak256(publicKey))))` | Complete |
-| Registry contract | Immutable Base registry model | Complete |
-| Verification path | Public key lookup plus local signature verification | Complete |
+| Entropy source | Hardware QRNG interface with local development entropy | Implemented |
+| Health testing | NIST SP 800-90B RCT and APT checks | Specified |
+| Key derivation | SHAKE-256 conditioned seed derivation | Implemented |
+| Primary signature | CRYSTALS-Dilithium, NIST FIPS 204 | Implemented |
+| Secondary signature | FALCON, NIST FIPS 206 | Reserved interface |
+| Agent address | `address(uint160(uint256(keccak256(publicKey))))` | Implemented |
+| Registry contract | Immutable Base registry source | Source ready |
+| Verification path | Public key lookup plus local signature verification | Implemented |
 
 ---
 
@@ -105,7 +105,7 @@ The registry is append-only. A registered identity can rotate keys or become per
 | Deterministic address derivation from post-quantum public keys | Satisfied |
 | Public key storage without certificate authorities | Satisfied |
 | Signature verification without trusted intermediaries | Satisfied |
-| Revocation state available from Base | Satisfied |
+| Revocation state represented by registry contract source | Satisfied |
 | Security horizon documented through 2080 | Satisfied |
 
 ---

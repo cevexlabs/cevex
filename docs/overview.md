@@ -31,9 +31,9 @@ CEVEX constructs a three-layer response.
 
 **Layer 1: Physical Entropy.** Keys are derived from hardware quantum random number generation. Quantum measurement events are nondeterministic by physical law. An adversary with unbounded computational resources cannot predict or reproduce the entropy used to generate a CEVEX identity. This means identity uniqueness is bounded by physics, not mathematics.
 
-**Layer 2: Post-Quantum Lattice Signatures.** Agent operations are authenticated using CRYSTALS-Dilithium and FALCON, both NIST-selected post-quantum schemes. Security reduces to the hardness of Module LWE and NTRU lattice problems, which have no known polynomial-time quantum algorithms.
+**Layer 2: Post-Quantum Lattice Signatures.** Agent operations are authenticated using CRYSTALS-Dilithium today. The FALCON interface is reserved as the secondary NIST scheme for the audited release path. Security reduces to the hardness of Module LWE for the active signing path and NTRU lattice problems for the reserved secondary path.
 
-**Layer 3: Decentralized On-Chain Registry.** Agent public keys are registered on Base as smart contracts, creating an append-only identity registry with Ethereum-secured finality. No certificate authority. No trusted third party. Any participant can verify any signature through direct lattice arithmetic.
+**Layer 3: Decentralized On-Chain Registry.** Agent public keys are designed to be registered on Base through an append-only identity contract with Ethereum-secured finality. No certificate authority. No trusted third party. Any participant can verify implemented signatures through direct lattice arithmetic.
 
 ---
 
@@ -81,7 +81,7 @@ sequenceDiagram
 | Standard | Role in CEVEX |
 |----------|---------------|
 | NIST FIPS 204 | Dilithium signing scheme |
-| NIST FIPS 206 | FALCON signing scheme |
+| NIST FIPS 206 | FALCON reserved secondary scheme |
 | NIST SP 800-90B | Entropy source requirements for QRNG |
 | NIST SP 800-208 | Key derivation guidance |
 

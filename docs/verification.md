@@ -92,18 +92,19 @@ In steady-state operation, verification requires zero network round trips. The v
 
 ## Batch Verification
 
-For scenarios where a verifier must check many signatures at once, CEVEX supports batch verification using a randomized linear combination:
+For scenarios where a verifier must check many signatures at once, the current developer surface supports batch verification as coordinated local verification over a message set. This keeps the result format stable while the later randomized aggregation path is reviewed.
+
+The reserved aggregation target is:
 
 $$\sum_{i=1}^{n} r_i \cdot \text{VerifyEq}_i = 0$$
 
 where $r_i$ are freshly sampled random coefficients. If all $n$ signatures are valid, the sum is zero with overwhelming probability.
 
-| Batch Size | Sequential (ms) | Batch (ms) | Speedup |
-|------------|-----------------|------------|---------|
-| 8 | 0.80 | 0.52 | 1.5x |
-| 64 | 6.40 | 3.10 | 2.1x |
-| 512 | 51.2 | 18.4 | 2.8x |
-| 4096 | 409.6 | 112.0 | 3.7x |
+| Batch mode | Current role |
+|---|---|
+| Local batch API | Verifies multiple signed messages with a shared result object |
+| Parallel execution | Runs independent verification checks without changing signature semantics |
+| Aggregated lattice equation | Reserved research and audit path |
 
 ---
 

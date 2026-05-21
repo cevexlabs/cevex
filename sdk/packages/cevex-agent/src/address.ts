@@ -6,7 +6,7 @@
  *   agentAddress = address(uint160(uint256(keccak256(publicKey))))
  *
  * This is the same formula used by the CevexRegistry Solidity contract.
- * The address is not an EOA and not controlled by any private key —
+ * The address is not an EOA and not controlled by any private key,
  * it is a pure commitment to the post-quantum public key.
  */
 

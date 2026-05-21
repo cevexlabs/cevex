@@ -13,7 +13,7 @@ export const provisionCommand = new Command('provision')
   .option('--out <path>', 'Output path for encrypted key file', './agent.key')
   .option('--metadata <path>', 'Path to JSON metadata file to anchor on-chain')
   .option('--rpc <url>', 'Custom RPC URL')
-  .option('--deployer-key <key>', 'Deployer wallet private key (0x...) for paying gas. Reads CEVEX_DEPLOYER_KEY env if not set.')
+  .option('--deployer-key <key>', 'Deployer wallet private key for paying gas. Reads CEVEX_DEPLOYER_KEY env if not set.')
   .option('--registry <address>', 'Override registry contract address')
   .action(async (opts) => {
     const entropy = opts.entropy as 'hardware-qrng' | 'software'

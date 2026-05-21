@@ -1,7 +1,7 @@
 # Developer Access
 
 {% hint style="info" %}
-**Active.** SDK, CLI, examples, and public integration documentation are the current delivery focus.
+**Active delivery.** The TypeScript packages, CLI surface, local validation demo, and GitBook reference are now available in the repository.
 {% endhint %}
 
 The protocol layer is useful only when developers can provision identities, sign actions, verify messages, and inspect registry state without handling raw lattice internals. Developer Access packages the CEVEX primitives into interfaces that are practical for agent operators and application teams.
@@ -54,13 +54,13 @@ graph LR
 
 | Deliverable | Purpose | Status |
 |---|---|---|
-| `@cevex/core` | Dilithium, FALCON interface, SHAKE-256, entropy types | In progress |
-| `@cevex/agent` | Provisioning, message signing, key rotation, revocation | In progress |
-| `@cevex/verify` | Verification, batch verification, transcript interface | In progress |
-| `@cevex/registry` | Base RPC client, identity lookup, registry writes | In progress |
-| `@cevex/cli` | Provision, sign, verify, rotate, revoke, inspect | In progress |
-| `cevex` Python | Python SDK with TypeScript API parity | In progress |
-| Examples | Local protocol validation and developer onboarding | In progress |
+| `@cevex/core` | Dilithium, FALCON guarded interface, SHAKE-256, entropy types | Implemented |
+| `@cevex/agent` | Provisioning, message signing, key rotation, revocation surface | Implemented |
+| `@cevex/verify` | Single verification, batch verification, transcript interface | Implemented |
+| `@cevex/registry` | Base RPC client, identity lookup, registry writes | Source ready |
+| `@cevex/cli` | Provision, sign, verify, rotate, revoke, inspect | Implemented |
+| `cevex` Python | Python SDK with TypeScript API parity | Active build |
+| Examples | Local protocol validation and developer onboarding | Implemented |
 | GitBook docs | Public protocol and integration reference | Live |
 
 ---
@@ -119,7 +119,7 @@ $$\text{Verify}_{pk}\!\left(\text{Encode}_{\text{CEVEX-MSG-v1}}(m),\sigma\right)
 | SDK | Deterministic message encoding across TypeScript and Python |
 | CLI | End-to-end provision, sign, verify, rotate, revoke workflows |
 | Registry | Configurable network, RPC URL, and registry address |
-| Examples | Local validation with no network dependency |
+| Examples | Local keygen, signing, verification, tamper rejection, and JSON output |
 | Security | Secret key material never printed in examples or logs |
 | Documentation | All commands and API surfaces match implementation |
 

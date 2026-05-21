@@ -16,8 +16,8 @@ const config: CevexConfig = {
   // Custom RPC URL. If not set, uses the public Base RPC endpoint.
   rpcUrl: 'https://mainnet.base.org',
 
-  // Registry contract address. Leave unset to use the canonical CEVEX registry.
-  registryAddress: '0x...',
+  // Registry contract address. Set to the canonical deployment or a custom registry.
+  registryAddress: '0xRegistryAddress',
 
   // Cache resolved public keys locally to avoid repeated registry queries.
   // Default: true
@@ -41,7 +41,7 @@ from cevex import CevexConfig
 config = CevexConfig(
     network="base",
     rpc_url="https://mainnet.base.org",
-    registry_address="0x...",
+    registry_address="0xRegistryAddress",
     cache_public_keys=True,
     cache_ttl=3600,
     timeout=10000,
@@ -54,8 +54,8 @@ config = CevexConfig(
 
 | Network | Chain ID | RPC | Registry |
 |---|---|---|---|
-| Base Mainnet | 8453 | `https://mainnet.base.org` | See [On-Chain Registry](../../docs/on-chain-registry.md) |
-| Base Sepolia | 84532 | `https://sepolia.base.org` | Testnet deployment |
+| Base Mainnet | 8453 | `https://mainnet.base.org` | Canonical deployment address |
+| Base Sepolia | 84532 | `https://sepolia.base.org` | Testnet deployment address |
 
 ---
 
