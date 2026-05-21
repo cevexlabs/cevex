@@ -2,7 +2,7 @@ import { ml_dsa65 } from '@noble/post-quantum/ml-dsa'
 import { shake256, keccak_256 } from '@noble/hashes/sha3'
 import { randomBytes } from 'crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import { dirname, join, resolve } from 'path'
+import { dirname, join, relative, resolve } from 'path'
 import { fileURLToPath } from 'url'
 
 const encoder = new TextEncoder()
@@ -48,6 +48,127 @@ function parseOptions(args) {
     i += 1
   }
   return parsed
+}
+
+const colorEnabled = (process.stdout.isTTY || options.color) &&
+  !options['no-color'] &&
+  !process.env.NO_COLOR
+
+const palette = {
+  line: '#3d8bff',
+  text: '#eff6ff',
+  muted: '#8bafc8',
+  soft: '#90aaff',
+  success: '#5ab4ff',
+  danger: '#cf2e2e',
+}
+
+function hexToRgb(hex) {
+  const value = hex.replace('#', '')
+  return [
+    parseInt(value.slice(0, 2), 16),
+    parseInt(value.slice(2, 4), 16),
+    parseInt(value.slice(4, 6), 16),
+  ]
+}
+
+function fg(hex) {
+  const [r, g, b] = hexToRgb(hex)
+  return text => colorEnabled ? `\x1b[38;2;${r};${g};${b}m${text}\x1b[0m` : text
+}
+
+const ansi = code => text => colorEnabled ? `\x1b[${code}m${text}\x1b[0m` : text
+const theme = {
+  line: fg(palette.line),
+  text: fg(palette.text),
+  muted: fg(palette.muted),
+  soft: fg(palette.soft),
+  success: fg(palette.success),
+  danger: fg(palette.danger),
+  bold: ansi('1'),
+}
+
+const box = options.ascii
+  ? { tl: '+', tr: '+', bl: '+', br: '+', h: '-', v: '|', l: '+', r: '+', x: '+' }
+  : { tl: '╭', tr: '╮', bl: '╰', br: '╯', h: '─', v: '│', l: '├', r: '┤', x: '┼' }
+
+const stripAnsi = text => String(text).replace(/\x1b\[[0-9;]*m/g, '')
+const visibleLength = text => stripAnsi(text).length
+const WIDTH = Math.max(82, Math.min(112, (process.stdout.columns || 104) - 2))
+const LABEL_W = 12
+const VALUE_W = WIDTH - LABEL_W - 7
+let printedPanels = 0
+
+function clip(text, width) {
+  const clean = stripAnsi(text)
+  if (clean.length <= width) return clean
+  if (width <= 3) return clean.slice(0, width)
+  return clean.slice(0, width - 3) + '...'
+}
+
+function pad(text, width) {
+  return text + ' '.repeat(Math.max(0, width - visibleLength(text)))
+}
+
+function cell(text, width, style = value => value) {
+  return pad(style(clip(String(text), width)), width)
+}
+
+function panelTop(title) {
+  const styled = theme.bold(title)
+  const clean = stripAnsi(styled)
+  const fill = Math.max(1, WIDTH - clean.length - 4)
+  return theme.line(box.tl + box.h + ' ') + styled + theme.line(' ' + box.h.repeat(fill) + box.tr)
+}
+
+function panelRule() {
+  return theme.line(
+    box.l +
+    box.h.repeat(LABEL_W + 2) +
+    box.x +
+    box.h.repeat(VALUE_W + 2) +
+    box.r,
+  )
+}
+
+function panelBottom() {
+  return theme.line(box.bl + box.h.repeat(WIDTH - 2) + box.br)
+}
+
+function panelRow(label, value, valueStyle = theme.text) {
+  return theme.line(box.v) + ' ' +
+    cell(label, LABEL_W, theme.muted) + ' ' +
+    theme.line(box.v) + ' ' +
+    cell(value, VALUE_W, valueStyle) + ' ' +
+    theme.line(box.v)
+}
+
+function messageRow(text, style = theme.soft) {
+  return theme.line(box.v) + ' ' + cell(text, WIDTH - 4, style) + ' ' + theme.line(box.v)
+}
+
+function printPanel(title, rows, messages = []) {
+  if (printedPanels > 0) console.log()
+  console.log(panelTop(title))
+  if (rows.length > 0) {
+    console.log(panelRule())
+    for (const row of rows) {
+      console.log(panelRow(row.label, row.value, row.style ?? theme.text))
+    }
+  }
+  if (messages.length > 0) {
+    console.log(panelRule())
+    for (const message of messages) {
+      console.log(messageRow(message.text ?? message, message.style ?? theme.soft))
+    }
+  }
+  console.log(panelBottom())
+  printedPanels += 1
+}
+
+function displayPath(path) {
+  const shown = path.startsWith(root) ? relative(root, path) : path
+  return shown.replace(/\\/g, '/')
 }
 
 function canonicalJson(value) {
@@ -172,27 +293,41 @@ function makeRequest(timestamp, input = {}) {
 }
 
 function showHelp() {
-  console.log('CEVEX file workflow demo')
-  console.log()
-  console.log('Run these in order:')
-  console.log('  node workflow.mjs init')
-  console.log(`  node workflow.mjs request --amount 2500.00 --recipient ${RECIPIENT}`)
-  console.log('  node workflow.mjs sign')
-  console.log('  node workflow.mjs verify')
-  console.log('  node workflow.mjs tamper')
-  console.log()
-  console.log('Shortcut:')
-  console.log('  node workflow.mjs all')
-  console.log()
-  console.log('Artifacts are written to examples/artifacts/.')
-  console.log()
-  console.log('Request options:')
-  console.log('  --amount     Transfer amount, for example 2500.00')
-  console.log('  --recipient  Destination address')
-  console.log('  --agent      Agent ID')
-  console.log('  --role       Agent role')
-  console.log('  --policy     Policy ID')
-  console.log('  --limit      Policy amount limit')
+  printPanel('CEVEX Local Workflow', [
+    { label: 'Purpose', value: 'step-by-step local signing workflow' },
+    { label: 'Network', value: 'offline demo with Base-shaped request' },
+    { label: 'Artifacts', value: 'examples/artifacts/' },
+  ], [
+    'Run node workflow.mjs init, request, sign, verify, tamper',
+    'Shortcut: node workflow.mjs all',
+  ])
+
+  printPanel('Commands', [
+    { label: '1', value: 'node workflow.mjs init' },
+    { label: '2', value: `node workflow.mjs request --amount 2500.00 --recipient ${RECIPIENT}` },
+    { label: '3', value: 'node workflow.mjs sign' },
+    { label: '4', value: 'node workflow.mjs verify' },
+    { label: '5', value: 'node workflow.mjs tamper' },
+  ])
+
+  printPanel('Request Options', [
+    { label: 'amount', value: 'Transfer amount, for example 2500.00' },
+    { label: 'recipient', value: 'Destination EVM address' },
+    { label: 'agent', value: 'Agent ID' },
+    { label: 'role', value: 'Agent role' },
+    { label: 'policy', value: 'Policy ID' },
+    { label: 'limit', value: 'Policy amount limit' },
+  ])
+}
+
+function printWorkflowBanner() {
+  printPanel('CEVEX Transfer Validation', [
+    { label: 'Scenario', value: 'Base USDC transfer approval' },
+    { label: 'Protocol', value: 'CEVEX-MSG-v1 with ML-DSA-65' },
+    { label: 'Runtime', value: 'local keygen, sign, verify, tamper check' },
+  ], [
+    'Each step writes or reads JSON artifacts under examples/artifacts/.',
+  ])
 }
 
 function init() {
@@ -224,14 +359,17 @@ function init() {
 
   writeJson(files.request, makeRequest(timestamp, options))
 
-  console.log('INIT OK')
-  console.log(`agent:   ${agentAddress}`)
-  console.log(`key:     ${files.agentKey}`)
-  console.log(`registry:${files.registry}`)
-  console.log(`request: ${files.request}`)
-  console.log()
-  console.log(`Next: node workflow.mjs request --amount 2500.00 --recipient ${RECIPIENT}`)
-  console.log('Or:   node workflow.mjs sign')
+  printPanel('STEP 1 / PREPARE AGENT', [
+    { label: 'Status', value: 'OK', style: theme.success },
+    { label: 'Agent', value: agentAddress, style: theme.success },
+    { label: 'Scheme', value: 'ML-DSA-65' },
+    { label: 'Key', value: displayPath(files.agentKey) },
+    { label: 'Registry', value: displayPath(files.registry) },
+    { label: 'Request', value: displayPath(files.request) },
+  ], [
+    `Next: node workflow.mjs request --amount 2500.00 --recipient ${RECIPIENT}`,
+    'Or: node workflow.mjs sign',
+  ])
 }
 
 function request() {
@@ -241,14 +379,16 @@ function request() {
   const requestFile = makeRequest(timestamp, options)
   writeJson(files.request, requestFile)
 
-  console.log('REQUEST OK')
-  console.log(`request:   ${requestFile.action.requestId}`)
-  console.log(`agent:     ${requestFile.action.agentId}`)
-  console.log(`action:    ${requestFile.action.amount} ${requestFile.action.token} to ${abbr(requestFile.action.recipient)}`)
-  console.log(`policy:    ${requestFile.action.policy} limit ${requestFile.action.policyLimit}`)
-  console.log(`output:    ${files.request}`)
-  console.log()
-  console.log('Next: node workflow.mjs sign')
+  printPanel('STEP 2 / CREATE REQUEST', [
+    { label: 'Status', value: 'OK', style: theme.success },
+    { label: 'Request', value: requestFile.action.requestId, style: theme.success },
+    { label: 'Agent', value: requestFile.action.agentId },
+    { label: 'Action', value: `${requestFile.action.amount} ${requestFile.action.token} to ${abbr(requestFile.action.recipient)}` },
+    { label: 'Policy', value: `${requestFile.action.policy} limit ${requestFile.action.policyLimit}` },
+    { label: 'Output', value: displayPath(files.request) },
+  ], [
+    'Next: node workflow.mjs sign',
+  ])
 }
 
 function sign() {
@@ -277,13 +417,17 @@ function sign() {
     signature: toHex(signature),
   })
 
-  console.log('SIGN OK')
-  console.log(`request:   ${request.action.requestId}`)
-  console.log(`action:    ${request.action.amount} ${request.action.token} to ${abbr(request.action.recipient)}`)
-  console.log(`signature: ${abbr(toHex(signature))}`)
-  console.log(`output:    ${files.signed}`)
-  console.log()
-  console.log('Next: node workflow.mjs verify')
+  printPanel('STEP 3 / SIGN PAYLOAD', [
+    { label: 'Status', value: 'OK', style: theme.success },
+    { label: 'Request', value: request.action.requestId, style: theme.success },
+    { label: 'Action', value: `${request.action.amount} ${request.action.token} to ${abbr(request.action.recipient)}` },
+    { label: 'Input', value: displayPath(files.request) },
+    { label: 'Hash', value: abbr(digestHex(signedBytes)) },
+    { label: 'Signature', value: abbr(toHex(signature)) },
+    { label: 'Output', value: displayPath(files.signed) },
+  ], [
+    'Next: node workflow.mjs verify',
+  ])
 }
 
 function verifyFile(path) {
@@ -319,13 +463,15 @@ function verifyFile(path) {
 function verify(path = files.signed) {
   const result = verifyFile(path)
 
-  console.log(result.valid ? 'VERIFY PASS' : 'VERIFY FAIL')
-  console.log(`file:      ${path}`)
-  console.log(`agent:     ${result.signed.agentAddress}`)
-  console.log(`request:   ${result.signed.action.requestId}`)
-  console.log(`action:    ${result.signed.action.amount} ${result.signed.action.token} to ${abbr(result.signed.action.recipient)}`)
-  console.log(`check:     ${result.reason}`)
-  console.log(`hash:      ${abbr(result.signedBytesHash ?? '')}`)
+  printPanel('STEP 4 / VERIFY SIGNATURE', [
+    { label: 'Status', value: result.valid ? 'PASS' : 'FAIL', style: result.valid ? theme.success : theme.danger },
+    { label: 'File', value: displayPath(path) },
+    { label: 'Agent', value: result.signed.agentAddress },
+    { label: 'Request', value: result.signed.action.requestId },
+    { label: 'Action', value: `${result.signed.action.amount} ${result.signed.action.token} to ${abbr(result.signed.action.recipient)}` },
+    { label: 'Check', value: result.reason, style: result.valid ? theme.success : theme.danger },
+    { label: 'Hash', value: abbr(result.signedBytesHash ?? '') },
+  ])
 
   if (!result.valid) process.exitCode = 1
 }
@@ -340,28 +486,27 @@ function tamper() {
 
   const result = verifyFile(files.tampered)
 
-  console.log(result.valid ? 'TAMPER FAIL' : 'TAMPER PASS')
-  console.log(`file:      ${files.tampered}`)
-  console.log(`amount:    ${tampered.action.amount}`)
-  console.log(`recipient: ${abbr(tampered.action.recipient)}`)
-  console.log(`check:     ${result.reason}`)
-  console.log()
-  console.log(result.valid
-    ? 'The modified request was accepted, which should not happen.'
-    : 'The modified request was rejected as expected.')
+  printPanel('STEP 5 / TAMPER TEST', [
+    { label: 'Status', value: result.valid ? 'FAIL' : 'PASS', style: result.valid ? theme.danger : theme.success },
+    { label: 'File', value: displayPath(files.tampered) },
+    { label: 'Amount', value: tampered.action.amount },
+    { label: 'Recipient', value: abbr(tampered.action.recipient) },
+    { label: 'Check', value: result.reason, style: result.valid ? theme.danger : theme.success },
+  ], [
+    result.valid
+      ? { text: 'The modified request was accepted, which should not happen.', style: theme.danger }
+      : { text: 'The modified request was rejected as expected.', style: theme.success },
+  ])
 
   if (result.valid) process.exitCode = 1
 }
 
 function all() {
+  printWorkflowBanner()
   init()
-  console.log()
   request()
-  console.log()
   sign()
-  console.log()
   verify()
-  console.log()
   tamper()
 }
 
