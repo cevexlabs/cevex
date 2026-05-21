@@ -1,0 +1,12 @@
+{
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "contract": "CevexRegistry",
+  "address": "0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C",
+  "deployer": "0x0Ee673295C6675976a4b47B37FC280c89c9985eC",
+  "transactionHash": "0xbaa6430feea26506954382c837fcb7567b2dd21eb341bd8acc4045387c2a0760",
+  "blockNumber": 41807025,
+  "gasUsed": "1041411",
+  "deployedAt": "2026-05-21T16:52:21.113Z",
+  "explorer": "https://sepolia.basescan.org/address/0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C"
+}

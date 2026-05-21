@@ -120,7 +120,7 @@ sequenceDiagram
 | Security Assumption | Module LWE | Reduction to M-LWE hardness | Implemented |
 | Verification | Trustless lattice arithmetic | No certificate authority required | Implemented |
 | Batch Verification | Parallel verifier surface | Parallel local checks | Implemented |
-| Registry | Base smart contract source | Append-only identity records | Source ready |
+| Registry | Base smart contract registry | Append-only identity records | Live on Base Sepolia |
 | SDK | Developer tooling | TypeScript packages and Python parity path | Active build |
 | CLI | Terminal tooling | Provision, sign, verify, rotate, revoke, inspect | Implemented |
 | Examples | Local protocol validation | Keygen, signing, verification, tamper rejection | Implemented |
@@ -196,9 +196,10 @@ See [sdk/README.md](sdk/README.md) for full documentation.
 - [x] Local tamper rejection demo
 - [x] Batch verification surface
 - [x] Base registry smart contract source
+- [x] Base Sepolia registry deployment
 - [x] TypeScript SDK package structure
 - [x] CLI command surface
-- [ ] Canonical Base deployment addresses
+- [ ] Canonical Base mainnet deployment address
 - [ ] FALCON audited implementation
 - [ ] Python SDK parity
 - [ ] ZK audit transcript tooling

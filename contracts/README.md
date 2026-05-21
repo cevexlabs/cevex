@@ -23,8 +23,24 @@ This directory contains the smart contract source and deployment tooling for the
 
 | Contract | Deployment status | Description |
 |----------|-------------------|-------------|
-| `CevexRegistry` | Deploy ready | Singleton registry. Manages all agent identity records. |
-| `ICevexRegistry` | Deploy ready | Interface for external integrators. |
+| `CevexRegistry` | Live on Base Sepolia | Singleton registry. Manages all agent identity records. |
+| `ICevexRegistry` | Live on Base Sepolia | Interface for external integrators. |
+
+---
+
+## Live Deployment
+
+| Network | Chain ID | Registry | Explorer |
+|---|---:|---|---|
+| Base Sepolia | 84532 | `0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C` | [Basescan](https://sepolia.basescan.org/address/0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C) |
+
+Latest demo registration:
+
+| Field | Value |
+|---|---|
+| Agent | `0x301FAA9cbf20C488bBC957a067a61c050ff73633` |
+| Transaction | [`0x2c909fed08c1496e97f10d284acf58acd79e5f81e2ccbe611fcaccb75893dea1`](https://sepolia.basescan.org/tx/0x2c909fed08c1496e97f10d284acf58acd79e5f81e2ccbe611fcaccb75893dea1) |
+| Status | Registered and active |
 
 ---
 

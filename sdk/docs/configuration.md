@@ -55,7 +55,7 @@ config = CevexConfig(
 | Network | Chain ID | RPC | Registry |
 |---|---|---|---|
 | Base Mainnet | 8453 | `https://mainnet.base.org` | Canonical deployment address |
-| Base Sepolia | 84532 | `https://sepolia.base.org` | Testnet deployment address |
+| Base Sepolia | 84532 | `https://sepolia.base.org` | `0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C` |
 
 ---
 

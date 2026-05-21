@@ -8,11 +8,29 @@ CEVEX agent identities are designed to be anchored on Base through an immutable 
 
 | Component | Status |
 |---|---|
-| `CevexRegistry.sol` | Source ready |
+| `CevexRegistry.sol` | Live on Base Sepolia |
 | Registry interface | Implemented |
-| TypeScript registry client | Source ready |
-| Canonical Base deployment address | Release item |
+| TypeScript registry client | Live Base Sepolia address configured |
+| Base Sepolia registry address | `0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C` |
+| Demo agent registration | Confirmed on-chain |
 | Public key lookup flow | Implemented client surface |
+
+---
+
+## Live Testnet Deployment
+
+| Network | Chain ID | Registry | Explorer |
+|---|---:|---|---|
+| Base Sepolia | 84532 | `0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C` | [Basescan](https://sepolia.basescan.org/address/0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C) |
+
+Live demo registration:
+
+| Field | Value |
+|---|---|
+| Agent | `0x301FAA9cbf20C488bBC957a067a61c050ff73633` |
+| Transaction | [`0x2c909fed08c1496e97f10d284acf58acd79e5f81e2ccbe611fcaccb75893dea1`](https://sepolia.basescan.org/tx/0x2c909fed08c1496e97f10d284acf58acd79e5f81e2ccbe611fcaccb75893dea1) |
+| Public key | 1952-byte ML-DSA-65 public key |
+| Status | Registered and active |
 
 ---
 

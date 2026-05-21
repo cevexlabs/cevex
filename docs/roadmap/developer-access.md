@@ -60,7 +60,7 @@ flowchart TB
 | `@cevex/core` | Core signing, key, and entropy utilities | Implemented |
 | `@cevex/agent` | Agent setup, signing, rotation, and revocation surface | Implemented |
 | `@cevex/verify` | Single and batch message verification | Implemented |
-| `@cevex/registry` | Base registry lookup and write helpers | Source ready |
+| `@cevex/registry` | Base registry lookup and write helpers | Live Base Sepolia address |
 | `@cevex/cli` | Terminal commands for the main workflows | Implemented |
 | `cevex` Python | Python SDK matching the TypeScript shape | Active build |
 | Examples | Local demo for onboarding and validation | Implemented |

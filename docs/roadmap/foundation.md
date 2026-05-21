@@ -60,7 +60,7 @@ graph TD
 | Signing | Agents can sign messages with Dilithium | Implemented |
 | Secondary scheme | FALCON stays reserved for a later audited release | Reserved |
 | Agent address | Each public key maps to a stable agent ID | Implemented |
-| Registry contract | Base registry source is available in the repo | Source ready |
+| Registry contract | Base registry source and Base Sepolia deployment are available | Live testnet |
 | Verification | Signatures can be checked locally without a certificate authority | Implemented |
 
 ---

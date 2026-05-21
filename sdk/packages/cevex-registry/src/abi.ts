@@ -2,7 +2,7 @@
  * CevexRegistry contract ABI.
  *
  * Extracted from contracts/CevexRegistry.sol.
- * Canonical Base and Base Sepolia addresses are set after deployment.
+ * Canonical Base and Base Sepolia addresses.
  */
 
 export const CEVEX_REGISTRY_ABI = [
@@ -127,7 +127,7 @@ export const CEVEX_REGISTRY_ABI = [
 
 export const REGISTRY_ADDRESSES: Record<string, `0x${string}` | null> = {
   'base':         null,         // Set after mainnet deployment
-  'base-sepolia': null,         // Set after testnet deployment
+  'base-sepolia': '0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C',
 }
 
 // Scheme encoding used by the contract

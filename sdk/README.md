@@ -48,7 +48,7 @@ This SDK is organized as a monorepo. Teams can use the combined bundle or the in
 | `@cevex/core` | Dilithium primitives, FALCON guarded interface, SHAKE-256 utilities | Implemented |
 | `@cevex/agent` | Agent provisioning, signing, key rotation, revocation surface | Implemented |
 | `@cevex/verify` | Signature verification, batch verification, transcript interface | Implemented |
-| `@cevex/registry` | Base registry client, key resolution, write helpers | Source ready |
+| `@cevex/registry` | Base registry client, key resolution, write helpers | Live Base Sepolia address |
 | `@cevex/sdk` | Combined bundle for application integrations | Active build |
 
 Python source lives in `sdk/python` and follows the same API shape as the TypeScript packages.
