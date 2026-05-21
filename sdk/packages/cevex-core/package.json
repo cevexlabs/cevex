@@ -1,0 +1,25 @@
+{
+  "name": "@cevex/core",
+  "version": "0.1.0",
+  "description": "Post-quantum cryptographic primitives for the CEVEX protocol",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.4.0",
+    "@noble/post-quantum": "^0.2.0"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "@cevex/sdk",
+  "version": "0.1.0",
+  "description": "Official SDK for the CEVEX post-quantum identity protocol",
+  "license": "MIT",
+  "author": "CEVEX Protocol <contact@cevex.io>",
+  "homepage": "https://cevex.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cevexlabs/Cevex"
+  },
+  "bugs": {
+    "url": "https://github.com/cevexlabs/Cevex/issues"
+  },
+  "keywords": [
+    "post-quantum",
+    "cryptography",
+    "dilithium",
+    "falcon",
+    "identity",
+    "agents",
+    "base",
+    "blockchain",
+    "pqc",
+    "lattice"
+  ],
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "eslint packages/**/src/**/*.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "eslint": "^9.0.0",
+    "vitest": "^1.0.0"
+  }
+}

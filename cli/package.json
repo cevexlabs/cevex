@@ -1,0 +1,28 @@
+{
+  "name": "@cevex/cli",
+  "version": "0.1.0",
+  "description": "Command-line interface for CEVEX agent provisioning and key management",
+  "license": "MIT",
+  "bin": {
+    "cevex": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "ts-node src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cevex/agent": "workspace:*",
+    "@cevex/core": "workspace:*",
+    "@cevex/registry": "workspace:*",
+    "@cevex/verify": "workspace:*",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "ts-node": "^10.9.0"
+  }
+}
