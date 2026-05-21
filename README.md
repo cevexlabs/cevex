@@ -209,7 +209,7 @@ See [sdk/README.md](sdk/README.md) for full documentation.
 ## Contact
 
 Website: [cevex.io](https://cevex.io)
-X: [@cevex_io](https://x.com/cevex_io)
+X: [@CevexLabs](https://x.com/CevexLabs)
 Email: contact@cevex.io
 
 ---
