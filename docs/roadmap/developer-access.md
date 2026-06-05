@@ -1,7 +1,7 @@
 # Phase 2: Developer Tools
 
 {% hint style="info" %}
-**Developer tools are active.** SDK packages, the CLI surface, the local demo, and GitBook reference are available in the repository.
+**Developer tools are active.** SDK packages, the CLI surface, the local authorization trace, and GitBook reference are available in the repository.
 {% endhint %}
 
 This phase turns the core identity system into tools people can actually use. Developers can create an agent identity, sign an action, verify a message, and inspect registry state without needing to understand the cryptography internals first.
@@ -26,7 +26,7 @@ flowchart TB
     subgraph Output["Developer Outputs"]
         CLI["@cevex/cli\nterminal commands"]
         PY["cevex\nPython SDK"]
-        DEMO["examples\nlocal demo"]
+        TRACE["examples\nauthorization trace"]
     end
 
     CORE --> AGENT
@@ -37,14 +37,14 @@ flowchart TB
     VERIFY --> CLI
     AGENT --> PY
     VERIFY --> PY
-    CLI --> DEMO
+    CLI --> TRACE
 
     style CORE fill:#003399,color:#eff6ff,stroke:#1a7fff
     style AGENT fill:#003399,color:#eff6ff,stroke:#1a7fff
     style VERIFY fill:#003399,color:#eff6ff,stroke:#1a7fff
     style REG fill:#003399,color:#eff6ff,stroke:#1a7fff
     style CLI fill:#001650,color:#7dd3fc,stroke:#3d8bff
-    style DEMO fill:#001650,color:#7dd3fc,stroke:#3d8bff
+    style TRACE fill:#001650,color:#7dd3fc,stroke:#3d8bff
     style PY fill:#001650,color:#7dd3fc,stroke:#3d8bff
     style Core fill:#001650,color:#eff6ff,stroke:#1a7fff
     style Workflow fill:#001650,color:#eff6ff,stroke:#1a7fff
@@ -63,7 +63,7 @@ flowchart TB
 | `@cevex/registry` | Base registry lookup and write helpers | Live Base Sepolia address |
 | `@cevex/cli` | Terminal commands for the main workflows | Implemented |
 | `cevex` Python | Python SDK matching the TypeScript shape | Active build |
-| Examples | Local demo for onboarding and validation | Implemented |
+| Examples | Local authorization trace for onboarding and validation | Implemented |
 | GitBook docs | Public reference for users and developers | Live |
 
 ---

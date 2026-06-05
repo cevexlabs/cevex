@@ -7,8 +7,8 @@
   "scripts": {
     "compile": "node scripts/compile.mjs",
     "deploy:base-sepolia": "node scripts/deploy-base-sepolia.mjs",
-    "demo:base-sepolia": "node scripts/demo-base-sepolia.mjs",
-    "live:base-sepolia": "npm run compile && npm run deploy:base-sepolia && npm run demo:base-sepolia"
+    "register:base-sepolia": "node scripts/register-base-sepolia.mjs",
+    "live:base-sepolia": "npm run compile && npm run deploy:base-sepolia && npm run register:base-sepolia"
   },
   "dependencies": {
     "@noble/hashes": "^1.4.0",

@@ -1,10 +1,10 @@
-# CEVEX Example Demo
+# CEVEX Protocol Trace
 
-This example is a local protocol validation run. It uses real ML-DSA-65 key generation, signing, and verification through `@noble/post-quantum`.
+This reference flow uses real ML-DSA-65 key generation, signing, and verification through `@noble/post-quantum`.
 
-The demo does not call Base, does not write secrets to disk, and does not submit a transaction. It proves the signing flow locally before a registry or wallet is connected.
+It does not call Base, does not write secrets to disk, and does not submit a transaction. It traces the authorization flow before registry-backed network execution.
 
-## What The Test Proves
+## What The Check Confirms
 
 1. A fresh post-quantum keypair is generated from conditioned entropy.
 2. A realistic Base USDC transfer approval is encoded as canonical JSON.
@@ -19,25 +19,25 @@ The demo does not call Base, does not write secrets to disk, and does not submit
 npm test
 ```
 
-Runs the realistic transfer approval test and emits JSON.
+Runs the transfer approval check and emits JSON.
 
 ```bash
 node run.mjs test
 ```
 
-Runs the same test with the terminal display.
+Runs the same check with the terminal display.
 
 ```bash
 node run.mjs
 ```
 
-Runs the full demo with the CLI reference panel.
+Runs the full authorization trace with the CLI reference panel.
 
 ```bash
 node run.mjs help
 ```
 
-Shows all available demo commands.
+Shows all available reference commands.
 
 ## File Workflow
 
@@ -51,7 +51,7 @@ Creates:
 
 | File | Purpose |
 |---|---|
-| `artifacts/agent.key.json` | Demo signing key for the local agent |
+| `artifacts/agent.key.json` | Local authorization key for the agent |
 | `artifacts/registry-record.json` | Offline registry record with the public key |
 | `artifacts/transfer-request.json` | Editable Base USDC transfer request |
 
@@ -74,7 +74,7 @@ Writes a transfer request with values you provide. Useful options are:
 node workflow.mjs sign
 ```
 
-Reads the demo key and transfer request, then writes `artifacts/signed-transfer.json`.
+Reads the authorization key and transfer request, then writes `artifacts/signed-transfer.json`.
 
 ```bash
 node workflow.mjs verify
@@ -96,7 +96,7 @@ npm run workflow
 
 ## Scenario
 
-The test models a treasury agent approving a Base USDC transfer:
+The flow models a treasury agent approving a Base USDC transfer:
 
 | Field | Example |
 |---|---|
@@ -108,4 +108,4 @@ The test models a treasury agent approving a Base USDC transfer:
 | Amount | `1250.00` |
 | Policy | `allowlist-transfer-v1` |
 
-The negative tests rebuild the signed bytes with a larger amount or a different recipient. The original signature must fail against both modified messages.
+The integrity checks rebuild the signed bytes with a larger amount or a different recipient. The original signature must fail against both modified messages.

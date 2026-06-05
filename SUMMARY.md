@@ -5,6 +5,7 @@
 ## The Protocol
 
 * [Overview](docs/overview.md)
+* [Protocol Flow](docs/protocol-flow.md)
 * [Key Generation](docs/key-generation.md)
 * [Post-Quantum Signatures](docs/signatures.md)
 * [Trustless Verification](docs/verification.md)

@@ -295,7 +295,7 @@ function makeRequest(timestamp, input = {}) {
 function showHelp() {
   printPanel('CEVEX Local Workflow', [
     { label: 'Purpose', value: 'step-by-step local signing workflow' },
-    { label: 'Network', value: 'offline demo with Base-shaped request' },
+    { label: 'Network', value: 'offline authorization flow with Base-shaped request' },
     { label: 'Artifacts', value: 'examples/artifacts/' },
   ], [
     'Run node workflow.mjs init, request, sign, verify, tamper',
@@ -321,10 +321,10 @@ function showHelp() {
 }
 
 function printWorkflowBanner() {
-  printPanel('CEVEX Transfer Validation', [
+  printPanel('CEVEX Transfer Authorization', [
     { label: 'Scenario', value: 'Base USDC transfer approval' },
     { label: 'Protocol', value: 'CEVEX-MSG-v1 with ML-DSA-65' },
-    { label: 'Runtime', value: 'local keygen, sign, verify, tamper check' },
+    { label: 'Runtime', value: 'keygen, authorize, verify, integrity check' },
   ], [
     'Each step writes or reads JSON artifacts under examples/artifacts/.',
   ])
@@ -339,8 +339,8 @@ function init() {
   const timestamp = Date.now()
 
   writeJson(files.agentKey, {
-    version: 'cevex-demo-key-v1',
-    warning: 'Demo key only. Do not use this file in production.',
+    version: 'cevex-local-key-v1',
+    warning: 'Local reference key only. Do not use this file in production.',
     agentAddress,
     scheme: 'ML-DSA-65',
     publicKey: toHex(publicKey),
@@ -348,7 +348,7 @@ function init() {
   })
 
   writeJson(files.registry, {
-    version: 'cevex-demo-registry-v1',
+    version: 'cevex-local-registry-v1',
     network: 'offline',
     agentAddress,
     scheme: 'ML-DSA-65',

@@ -12,7 +12,7 @@ CEVEX agent identities are designed to be anchored on Base through an immutable 
 | Registry interface | Implemented |
 | TypeScript registry client | Live Base Sepolia address configured |
 | Base Sepolia registry address | `0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C` |
-| Demo agent registration | Confirmed on-chain |
+| Registry agent registration | Confirmed on-chain |
 | Public key lookup flow | Implemented client surface |
 
 ---
@@ -23,12 +23,12 @@ CEVEX agent identities are designed to be anchored on Base through an immutable 
 |---|---:|---|---|
 | Base Sepolia | 84532 | `0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C` | [Basescan](https://sepolia.basescan.org/address/0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C) |
 
-Live demo registration:
+Live registry agent registration:
 
 | Field | Value |
 |---|---|
-| Agent | `0x301FAA9cbf20C488bBC957a067a61c050ff73633` |
-| Transaction | [`0x2c909fed08c1496e97f10d284acf58acd79e5f81e2ccbe611fcaccb75893dea1`](https://sepolia.basescan.org/tx/0x2c909fed08c1496e97f10d284acf58acd79e5f81e2ccbe611fcaccb75893dea1) |
+| Agent | `0x6A596904Bd096FA91D280566182A7b2193aE3495` |
+| Transaction | [`0xfaf247e436349c558f71c0c11e38e4c03de81a2fec83cc2b387999d18fcb8e78`](https://sepolia.basescan.org/tx/0xfaf247e436349c558f71c0c11e38e4c03de81a2fec83cc2b387999d18fcb8e78) |
 | Public key | 1952-byte ML-DSA-65 public key |
 | Status | Registered and active |
 

@@ -1,7 +1,7 @@
 {
   "name": "@cevex/examples",
   "version": "0.1.0",
-  "description": "CEVEX protocol live terminal demo, keygen, sign, verify",
+  "description": "CEVEX protocol authorization trace, keygen, sign, verify",
   "type": "module",
   "scripts": {
     "start": "node run.mjs",

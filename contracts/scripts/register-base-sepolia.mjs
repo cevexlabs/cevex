@@ -15,7 +15,7 @@ const root = resolve(scriptsDir, '..')
 const artifactPath = join(root, 'build', 'CevexRegistry.json')
 const deploymentsDir = join(root, 'deployments')
 const deploymentPath = join(deploymentsDir, 'base-sepolia.json')
-const demoPath = join(deploymentsDir, 'base-sepolia-demo.json')
+const registrationPath = join(deploymentsDir, 'base-sepolia-agent.json')
 
 loadEnv(join(root, '.env'))
 
@@ -53,12 +53,12 @@ const publicKeyHex = `0x${Buffer.from(publicKey).toString('hex')}`
 const publicKeyHash = `0x${Buffer.from(shake256(publicKey, { dkLen: 32 })).toString('hex')}`
 const agentAddress = deriveAgentAddress(publicKey)
 const metadataHash = keccak256(toUtf8Bytes(JSON.stringify({
-  demo: 'base-sepolia-agent-registration',
+  purpose: 'base-sepolia-agent-registration',
   scheme: 'ML-DSA-65',
   publicKeyHash,
 })))
 
-panel('LIVE DEMO START', [
+panel('REGISTRY AGENT REGISTRATION START', [
   { label: 'Registry', value: deployment.address, status: true },
   { label: 'Agent', value: agentAddress },
   { label: 'Scheme', value: 'ML-DSA-65' },
@@ -69,8 +69,33 @@ spacer()
 const tx = await registry.registerAgent(publicKeyHex, 0, 3, metadataHash)
 const receipt = await tx.wait()
 
-const active = await registry.isActive(agentAddress)
-const identity = await registry.getIdentity(agentAddress)
+const event = receipt.logs
+  .map(log => {
+    try {
+      return registry.interface.parseLog(log)
+    } catch {
+      return null
+    }
+  })
+  .find(log => log?.name === 'AgentRegistered')
+const registeredAgent = event?.args?.agentAddress
+if (!registeredAgent) {
+  throw new Error('AgentRegistered event was not found in the receipt.')
+}
+
+let active = false
+let identity = null
+for (let attempt = 0; attempt < 8; attempt += 1) {
+  active = await registry.isActive(registeredAgent)
+  if (active) {
+    identity = await registry.getIdentity(registeredAgent)
+    break
+  }
+  await sleep(1500)
+}
+if (!identity) {
+  throw new Error('Agent was registered but the RPC has not returned the identity yet. Try the check command again.')
+}
 const [storedPublicKey, scheme, securityLevel, registeredAt, revokedAt, storedMetadataHash] = identity
 
 if (!active) {
@@ -78,17 +103,17 @@ if (!active) {
 }
 
 if (storedPublicKey.toLowerCase() !== publicKeyHex.toLowerCase()) {
-  throw new Error('On-chain public key does not match the demo public key.')
+  throw new Error('On-chain public key does not match the generated public key.')
 }
 
 const txUrl = `https://sepolia.basescan.org/tx/${tx.hash}`
-const agentUrl = `https://sepolia.basescan.org/address/${agentAddress}`
+const agentUrl = `https://sepolia.basescan.org/address/${registeredAgent}`
 
-const demo = {
+const registration = {
   network: 'base-sepolia',
   chainId: 84532,
   registryAddress: deployment.address,
-  agentAddress,
+  agentAddress: registeredAgent,
   scheme: Number(scheme),
   securityLevel: Number(securityLevel),
   active,
@@ -99,7 +124,7 @@ const demo = {
   transactionHash: tx.hash,
   blockNumber: Number(receipt.blockNumber),
   gasUsed: receipt.gasUsed.toString(),
-  demonstratedAt: new Date().toISOString(),
+  recordedAt: new Date().toISOString(),
   explorer: {
     transaction: txUrl,
     agent: agentUrl,
@@ -108,17 +133,21 @@ const demo = {
 }
 
 mkdirSync(deploymentsDir, { recursive: true })
-writeFileSync(demoPath, JSON.stringify(demo, null, 2) + '\n')
+writeFileSync(registrationPath, JSON.stringify(registration, null, 2) + '\n')
 
-panel('LIVE DEMO OK', [
+panel('REGISTRY AGENT REGISTRATION OK', [
   { label: 'Status', value: 'agent registered and active', status: true },
-  { label: 'Agent', value: agentAddress },
+  { label: 'Agent', value: registeredAgent },
   { label: 'Tx', value: tx.hash },
   { label: 'Block', value: String(receipt.blockNumber) },
-  { label: 'Saved', value: 'deployments/base-sepolia-demo.json' },
+  { label: 'Saved', value: 'deployments/base-sepolia-agent.json' },
 ], [
   txUrl,
 ])
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 function deriveAgentAddress(publicKey) {
   const hash = keccak_256(publicKey)

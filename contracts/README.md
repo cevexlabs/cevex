@@ -34,12 +34,12 @@ This directory contains the smart contract source and deployment tooling for the
 |---|---:|---|---|
 | Base Sepolia | 84532 | `0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C` | [Basescan](https://sepolia.basescan.org/address/0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C) |
 
-Latest demo registration:
+Latest registry agent registration:
 
 | Field | Value |
 |---|---|
-| Agent | `0x301FAA9cbf20C488bBC957a067a61c050ff73633` |
-| Transaction | [`0x2c909fed08c1496e97f10d284acf58acd79e5f81e2ccbe611fcaccb75893dea1`](https://sepolia.basescan.org/tx/0x2c909fed08c1496e97f10d284acf58acd79e5f81e2ccbe611fcaccb75893dea1) |
+| Agent | `0x490BBfc9424b846c2955eC8984C4b951296A82d9` |
+| Transaction | [`0x12cbf34a5959e28f87950045c026ab824746163de303abdc85287be4388b7412`](https://sepolia.basescan.org/tx/0x12cbf34a5959e28f87950045c026ab824746163de303abdc85287be4388b7412) |
 | Status | Registered and active |
 
 ---
@@ -81,11 +81,11 @@ The contract workspace uses `solc` for compilation and `ethers` for Base Sepolia
 | `interfaces/ICevexRegistry.sol` | External integration interface |
 | `scripts/compile.mjs` | Compiles the registry and writes `build/CevexRegistry.json` |
 | `scripts/deploy-base-sepolia.mjs` | Deploys the registry to Base Sepolia |
-| `scripts/demo-base-sepolia.mjs` | Registers a live demo agent and verifies the on-chain record |
+| `scripts/register-base-sepolia.mjs` | Registers a registry agent and verifies the on-chain record |
 
 ---
 
-## Base Sepolia Live Demo
+## Base Sepolia Registry Operation
 
 Create a local environment file:
 
@@ -99,7 +99,7 @@ PowerShell:
 Copy-Item .env.example .env
 ```
 
-Set `DEPLOYER_PRIVATE_KEY` to a funded Base Sepolia test wallet. Do not commit `.env`.
+Set `DEPLOYER_PRIVATE_KEY` to a funded Base Sepolia wallet. Do not commit `.env`.
 
 Install dependencies and compile:
 
@@ -114,10 +114,10 @@ Deploy the registry:
 npm run deploy:base-sepolia
 ```
 
-Run the live agent registration demo:
+Run the registry agent registration:
 
 ```bash
-npm run demo:base-sepolia
+npm run register:base-sepolia
 ```
 
 Run the full path in one command:
@@ -126,7 +126,7 @@ Run the full path in one command:
 npm run live:base-sepolia
 ```
 
-The scripts write public deployment receipts to `deployments/base-sepolia.json` and `deployments/base-sepolia-demo.json`.
+The scripts write public deployment receipts to `deployments/base-sepolia.json` and `deployments/base-sepolia-agent.json`.
 
 ---
 

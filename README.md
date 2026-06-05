@@ -34,6 +34,14 @@ CEVEX addresses this through the convergence of three primitives:
 
 ---
 
+## Live Authorization Flow
+
+![CEVEX protocol flow](docs/assets/cevex-protocol-flow.svg)
+
+The execution path is intentionally strict: prepare the intent, sign the exact values with ML-DSA, resolve the registry agent on Base, verify locally, then execute only when the transaction matches the signed authorization.
+
+---
+
 ## Protocol Architecture
 
 ```mermaid
@@ -146,6 +154,7 @@ cevex/
 | Document | Description |
 |----------|-------------|
 | [Protocol Overview](docs/overview.md) | High-level explanation of the CEVEX protocol |
+| [Protocol Flow](docs/protocol-flow.md) | Signed intent, registry anchor, verification, and execution path |
 | [Key Generation](docs/key-generation.md) | Quantum entropy sourcing and key derivation |
 | [Post-Quantum Signatures](docs/signatures.md) | Dilithium implementation and FALCON release path |
 | [Trustless Verification](docs/verification.md) | Verification without trusted parties |
@@ -193,7 +202,7 @@ See [sdk/README.md](sdk/README.md) for full documentation.
 
 - [x] Quantum-conditioned key generation
 - [x] CRYSTALS-Dilithium signing and verification
-- [x] Local tamper rejection demo
+- [x] Local tamper rejection checks
 - [x] Batch verification surface
 - [x] Base registry smart contract source
 - [x] Base Sepolia registry deployment

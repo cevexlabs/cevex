@@ -1,0 +1,22 @@
+{
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "registryAddress": "0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C",
+  "agentAddress": "0x6A596904Bd096FA91D280566182A7b2193aE3495",
+  "scheme": 0,
+  "securityLevel": 3,
+  "active": true,
+  "registeredAt": 1779395658,
+  "revokedAt": 0,
+  "publicKeyHash": "0x32068fde169e3a93419cfebc733d696599f93734b682923577f447dbdb40252f",
+  "metadataHash": "0x5c00e3aad3f438ed9642fe12af6765954723398115a51b35b159fa4a687d508b",
+  "transactionHash": "0xfaf247e436349c558f71c0c11e38e4c03de81a2fec83cc2b387999d18fcb8e78",
+  "blockNumber": 41813685,
+  "gasUsed": "1480569",
+  "recordedAt": "2026-05-21T20:34:19.471Z",
+  "explorer": {
+    "transaction": "https://sepolia.basescan.org/tx/0xfaf247e436349c558f71c0c11e38e4c03de81a2fec83cc2b387999d18fcb8e78",
+    "agent": "https://sepolia.basescan.org/address/0x6A596904Bd096FA91D280566182A7b2193aE3495",
+    "registry": "https://sepolia.basescan.org/address/0x59b121Bde845DBcbaEf6441d7B989cBd9eE3496C"
+  }
+}

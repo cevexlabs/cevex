@@ -218,7 +218,7 @@ function showBanner() {
   console.log(row())
   console.log(row(center('Post-quantum identity for autonomous AI agents', WIDTH - 4), theme.bold))
   console.log(row(center('ML-DSA-65 / NIST FIPS 204 / Base registry compatible', WIDTH - 4), theme.dim))
-  console.log(row(center('Local protocol validation - no network calls', WIDTH - 4), theme.muted))
+  console.log(row(center('Protocol authorization trace - no network calls', WIDTH - 4), theme.muted))
   console.log(row())
   console.log(theme.blue(box.bl + box.h.repeat(WIDTH - 2) + box.br))
   console.log()
@@ -350,7 +350,7 @@ function runKeygen() {
     { group: 'Parameters' },
     { field: 'Scheme', value: 'CRYSTALS-Dilithium / ML-DSA-65', note: 'NIST FIPS 204' },
     { field: 'Security', value: '162-bit post-quantum target', note: 'Module LWE' },
-    { field: 'Entropy', value: 'OS CSPRNG -> SHAKE-256 seed', note: 'local demo mode' },
+    { field: 'Entropy', value: 'OS CSPRNG -> SHAKE-256 seed', note: 'local trace mode' },
     { group: 'Identity Material' },
     { field: 'Public key', value: `${publicKey.length} bytes`, note: `hash ${abbr(publicKeyHash, 8, 8)}` },
     { field: 'Secret key', value: `${secretKey.length} bytes  redacted`, note: 'never printed' },
@@ -504,7 +504,7 @@ function showSummary(keygen, signing, verification) {
     !verification.amountTamperAccepted &&
     !verification.recipientTamperAccepted
 
-  section('04', 'Run Summary', 'Protocol validation result and execution profile', [
+  section('04', 'Run Summary', 'Authorization result and execution profile', [
     { group: 'Result' },
     {
       field: 'Run result',
@@ -518,7 +518,7 @@ function showSummary(keygen, signing, verification) {
     { field: 'Policy', value: signing.payload.controls.policy, note: `max ${signing.payload.controls.maxAmount}` },
     { field: 'PQC scheme', value: 'CRYSTALS-Dilithium / ML-DSA-65', note: 'default path' },
     { field: 'Identity', value: keygen.agentAddress, note: 'registry-ready' },
-    { field: 'Artifacts', value: 'none written to disk', note: 'demo is memory-only' },
+    { field: 'Artifacts', value: 'none written to disk', note: 'memory-only trace' },
   ])
 }
 
@@ -539,17 +539,17 @@ function showCliReference() {
   console.log(commandRule('bottom'))
   console.log()
 
-  console.log(titleLine('', 'Demo Commands', 'Local validation modes and output controls'))
+  console.log(titleLine('', 'Reference Commands', 'Authorization trace modes and output controls'))
   console.log(commandRule())
   console.log(commandRow('Command', 'Description', theme.bold, theme.bold))
   console.log(commandRule())
-  console.log(commandRow('node run.mjs', 'full protocol validation'))
+  console.log(commandRow('node run.mjs', 'full authorization trace'))
   console.log(commandRow('node run.mjs keygen', 'run key generation only'))
   console.log(commandRow('node run.mjs sign', 'run key generation and signing'))
   console.log(commandRow('node run.mjs verify', 'run key generation, signing, and verification'))
-  console.log(commandRow('node run.mjs test', 'run realistic transfer approval test'))
+  console.log(commandRow('node run.mjs test', 'run transfer approval check'))
   console.log(commandRow('node run.mjs help', 'show this screen'))
-  console.log(commandRow('--json', 'emit machine-readable validation result'))
+  console.log(commandRow('--json', 'emit machine-readable authorization result'))
   console.log(commandRow('--color / --no-color', 'force or disable branded terminal colors'))
   console.log(commandRow('--ascii', 'use plain ASCII borders and wordmark'))
   console.log(commandRule('bottom'))
@@ -558,8 +558,8 @@ function showCliReference() {
 
 function showHelp() {
   showBanner()
-  section('00', 'About', 'Offline developer validation for the CEVEX message flow', [
-    { field: 'Purpose', value: 'local CEVEX protocol validation', note: 'developer demo' },
+  section('00', 'About', 'Offline authorization trace for the CEVEX message flow', [
+    { field: 'Purpose', value: 'local CEVEX authorization trace', note: 'reference run' },
     { field: 'Crypto', value: 'real ML-DSA-65 keygen/sign/verify', note: '@noble/post-quantum' },
     { field: 'Network', value: 'none', note: 'runs offline' },
     { field: 'Secrets', value: 'held in memory, never printed', note: 'redacted output' },
@@ -575,11 +575,11 @@ function emitHelpJson() {
       keygen: 'run key generation only',
       sign: 'run key generation and signing',
       verify: 'run key generation, signing, and verification',
-      test: 'run realistic transfer approval test',
+      test: 'run transfer approval check',
       help: 'show usage information',
     },
     options: {
-      json: 'emit machine-readable validation result',
+      json: 'emit machine-readable authorization result',
       color: 'force branded terminal colors',
       noColor: 'disable terminal colors',
     },
