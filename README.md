@@ -36,8 +36,6 @@ CEVEX addresses this through the convergence of three primitives:
 
 ## Live Authorization Flow
 
-![CEVEX protocol flow](docs/assets/cevex-protocol-flow.svg)
-
 The execution path is intentionally strict: prepare the intent, sign the exact values with ML-DSA, resolve the registry agent on Base, verify locally, then execute only when the transaction matches the signed authorization.
 
 ---

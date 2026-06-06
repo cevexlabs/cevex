@@ -2,8 +2,6 @@
 
 The CEVEX authorization path is designed to make an agent action independently verifiable before execution.
 
-![CEVEX protocol flow](assets/cevex-protocol-flow.svg)
-
 ## Execution Path
 
 | Step | Action | Result |
@@ -17,7 +15,7 @@ The CEVEX authorization path is designed to make an agent action independently v
 
 ## What This Shows
 
-The visual shows the live utility of the protocol rather than a conceptual diagram. CEVEX binds a transaction intent to a post-quantum signature, checks the public key through the on-chain registry, verifies the authorization locally, and only then allows execution.
+CEVEX binds a transaction intent to a post-quantum signature, checks the public key through the on-chain registry, verifies the authorization locally, and only then allows execution.
 
 For normal users, this means a simple rule:
 
